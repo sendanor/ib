@@ -1,6 +1,15 @@
 import ProcessUtils from "./services/ProcessUtils";
-import InventoryArgumentService from "./services/InventoryArgumentService";
+import InventoryArgumentService, {
+    InventoryOutputFormat,
+    MainArgumentsObject
+} from "./services/InventoryArgumentService";
 import {some} from "./modules/lodash";
+import InventoryAction from "./types/InventoryAction";
+import InventoryClientUtils, {InventoryClientListResponse} from "./services/InventoryClientUtils";
+import {IB_COLLECTION, IB_URL} from "./constants/env";
+import LogService from "./services/LogService";
+
+const LOG = LogService.createLogger('Main');
 
 export class Main {
 
@@ -43,18 +52,115 @@ export class Main {
 
     }
 
-    public static run () {
+    public static run () : Promise<number> {
 
         const args = ProcessUtils.getArguments();
 
         if (some(args, (item: string) => item === '--help' || item === '-h')) {
             Main.printUsage();
-            return;
+            return Promise.resolve(0);
         }
 
         const parsedArgs = InventoryArgumentService.parseInventoryArguments(args);
 
-        console.log('Args: ', parsedArgs);
+        LOG.debug('Args: ', parsedArgs);
+
+        switch (parsedArgs.action) {
+
+            case InventoryAction.LOGIN   : return Main.loginAction(parsedArgs);
+            case InventoryAction.LOGOUT  : return Main.logoutAction(parsedArgs);
+            case InventoryAction.LIST    : return Main.listCollectionAction(parsedArgs);
+            case InventoryAction.GET     : return Main.getResourceAction(parsedArgs);
+            case InventoryAction.SET     : return Main.setResourceAction(parsedArgs);
+            case InventoryAction.DELETE  : return Main.deleteResourceAction(parsedArgs);
+
+            default:
+                throw new TypeError(`The action "${parsedArgs.action}" is unsupported`);
+
+        }
+
+    }
+
+    public static loginAction (parsedArgs : MainArgumentsObject) : Promise<number> {
+        throw new TypeError(`The login is not supported yet`);
+    }
+
+    public static logoutAction (parsedArgs : MainArgumentsObject) : Promise<number> {
+        throw new TypeError(`The logout is not supported yet`);
+    }
+
+    public static listCollectionAction (parsedArgs : MainArgumentsObject) : Promise<number> {
+
+        const url        = parsedArgs.url        ?? IB_URL;
+        const collection = parsedArgs.collection ?? IB_COLLECTION;
+
+        return InventoryClientUtils.listCollection({
+            url: url,
+            collection: collection
+        }).then((response : InventoryClientListResponse) => {
+
+            console.log( Main.stringifyOutput(response?.payload, InventoryOutputFormat.DEFAULT) );
+
+            return 0;
+
+        });
+
+    }
+
+    public static getResourceAction (parsedArgs : MainArgumentsObject) : Promise<number> {
+        throw new TypeError(`The logout is not supported yet`);
+    }
+
+    public static setResourceAction (parsedArgs : MainArgumentsObject) : Promise<number> {
+        throw new TypeError(`The logout is not supported yet`);
+    }
+
+    public static deleteResourceAction (parsedArgs : MainArgumentsObject) : Promise<number> {
+        throw new TypeError(`The logout is not supported yet`);
+    }
+
+    private static jsonStringifyOutput ( value : any ) : string {
+        try {
+            return JSON.stringify(value);
+        } catch (err) {
+            throw new TypeError(`Cannot JSON stringify value "${value}: ${err}`);
+        }
+    }
+
+    private static stringifyOutput (value : any, type : InventoryOutputFormat) : string {
+
+        switch (type) {
+
+            case InventoryOutputFormat.STRING:
+                return `${value}`;
+
+            case InventoryOutputFormat.RECORD:
+                return `${ this.jsonStringifyOutput(value) }`;
+
+            case InventoryOutputFormat.JSON:
+                return `${ this.jsonStringifyOutput(value) }`;
+
+            case InventoryOutputFormat.OBJECT:
+                return `${ this.jsonStringifyOutput(value) }`;
+
+            case InventoryOutputFormat.ARRAY:
+                return `${ this.jsonStringifyOutput(value) }`;
+
+            case InventoryOutputFormat.BOOLEAN:
+                return `${ this.jsonStringifyOutput(value) }`;
+
+            case InventoryOutputFormat.NUMBER:
+                return `${ this.jsonStringifyOutput(value) }`;
+
+            case InventoryOutputFormat.INTEGER:
+                return `${ this.jsonStringifyOutput(value) }`;
+
+            case InventoryOutputFormat.DEFAULT:
+                return `${ this.jsonStringifyOutput(value) }`;
+
+        }
+
+        throw new TypeError(`The output type "${type}" is not implemented for stringifier.`);
 
     }
 

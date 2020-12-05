@@ -1,5 +1,8 @@
 import {forEach, indexOf, isNumber, keys, map, reduce, some, startsWith, trim} from "../modules/lodash";
 import InventoryAction from "../types/InventoryAction";
+import LogService from "./LogService";
+
+const LOG = LogService.createLogger('InventoryArgumentService');
 
 export enum InventoryOutputFormat {
 
@@ -319,7 +322,7 @@ export class InventoryArgumentService {
 
         } catch (err) {
 
-            console.debug('JSON parsing error: ', err);
+            LOG.debug('JSON parsing error: ', err);
 
             throw new TypeError(`The value for property "${key}" was not a valid JSON string: "${value}"`);
 

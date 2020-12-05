@@ -65,7 +65,9 @@ export class ProcessUtils {
 
         const file = PATH.join(process.cwd(), '.env');
 
-        ProcessUtils.initEnvFromFile(file);
+        if (FS.existsSync(file)) {
+            ProcessUtils.initEnvFromFile(file);
+        }
 
     }
 
