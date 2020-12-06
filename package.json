@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "description": "Shell client for [Sendanor's Inventory Backend (for Ansible)](https://github.com/sendanor/inventory-backend).",
   "main": "./dist/index.ts",
-  "bin": {},
+  "bin": {
+    "ib": "./dist/ib.js"
+  },
   "scripts": {
-      "start": "node dist/ib.js",
+      "start": "node ./dist/ib.js",
       "build": "tsc",
       "watch": "tsc --watch",
       "test": "echo \"Error: no test specified\" && exit 1"
