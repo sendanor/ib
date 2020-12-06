@@ -3,8 +3,8 @@ import AssertUtils from "./AssertUtils";
 
 export interface InventoryClientListRequestObject {
 
-    readonly url        : string;
-    readonly collection : string;
+    readonly url   : string;
+    readonly group : string;
 
 }
 
@@ -18,7 +18,7 @@ export interface InventoryClientListResponse {
 export interface InventoryClientGetRequestObject {
 
     readonly url        : string;
-    readonly collection : string;
+    readonly group : string;
     readonly resource   : string;
 
 }
@@ -33,7 +33,7 @@ export interface InventoryClientGetResponse {
 export interface InventoryClientSetRequestObject {
 
     readonly url        : string;
-    readonly collection : string;
+    readonly group : string;
     readonly resource   : string;
 
 }
@@ -51,7 +51,7 @@ export interface InventoryClientSetResponse {
 export interface InventoryClientDeleteRequestObject {
 
     readonly url        : string;
-    readonly collection : string;
+    readonly group : string;
     readonly resource   : string;
 
 }
@@ -65,17 +65,22 @@ export interface InventoryClientDeleteResponse {
 
 export class InventoryClientUtils {
 
-    public static listCollection (request : InventoryClientListRequestObject) : Promise<InventoryClientListResponse> {
+    public static listGroup (request : InventoryClientListRequestObject) : Promise<InventoryClientListResponse> {
 
         AssertUtils.isObject(request);
         AssertUtils.isString(request.url);
-        AssertUtils.isString(request.collection);
+        AssertUtils.isString(request.group);
 
-        const url = `${ request.url }/${ this.q(request.collection) }`;
+        // FIXME: Add support for changing these from the command line
+        const page = 1;
+        const size = 10;
+
+        const url = `${ request.url }/${ this.q(request.group) }?page=${this.q(''+page)}&size=${this.q(''+size)}`;
 
         return HttpClientUtils.jsonRequest(HttpMethod.GET, url).then((response: HttpClientResponseObject) : InventoryClientListResponse => {
 
             const payload = response?.data?.payload ?? undefined;
+
             return {
                 request: request,
                 payload: payload
@@ -89,10 +94,10 @@ export class InventoryClientUtils {
 
         AssertUtils.isObject(request);
         AssertUtils.isString(request.url);
-        AssertUtils.isString(request.collection);
+        AssertUtils.isString(request.group);
         AssertUtils.isString(request.resource);
 
-        const url = `${ request.url }/${ this.q(request.collection) }/${ this.q(request.resource) }`;
+        const url = `${ request.url }/${ this.q(request.group) }/${ this.q(request.resource) }`;
 
         return HttpClientUtils.jsonRequest(HttpMethod.GET, url).then((response: HttpClientResponseObject) : InventoryClientGetResponse => {
 

@@ -33,8 +33,8 @@ export enum InventoryInputType {
 
 export enum InventoryOptionKey {
 
-    URL        = "url",
-    COLLECTION = "collection"
+    URL   = "url",
+    GROUP = "group"
 
 }
 
@@ -56,7 +56,7 @@ export interface PropertySetAction {
 export interface MainArgumentsObject {
 
     readonly action             ?: InventoryAction;
-    readonly collection         ?: string;
+    readonly group              ?: string;
     readonly url                ?: string;
     readonly resource           ?: string;
 
@@ -111,10 +111,10 @@ export class InventoryArgumentService {
                         };
                         break;
 
-                    case InventoryOptionKey.COLLECTION:
+                    case InventoryOptionKey.GROUP:
                         result = {
                             ...result,
-                            collection: value
+                            group: value
                         };
                         break;
 

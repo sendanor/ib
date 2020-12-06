@@ -6,7 +6,7 @@ import LogUtils from "../services/LogUtils";
  *
  * This defaults to "hosts".
  */
-export const IB_COLLECTION : string = process?.env?.IB_COLLECTION ?? "hosts";
+export const IB_GROUP : string = process?.env?.IB_GROUP ?? "hosts";
 
 /**
  * The default URL to use to the backend.

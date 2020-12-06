@@ -6,7 +6,7 @@ import InventoryArgumentService, {
 import {some} from "./modules/lodash";
 import InventoryAction from "./types/InventoryAction";
 import InventoryClientUtils, {InventoryClientListResponse} from "./services/InventoryClientUtils";
-import {IB_COLLECTION, IB_URL} from "./constants/env";
+import {IB_GROUP, IB_URL} from "./constants/env";
 import LogService from "./services/LogService";
 
 const LOG = LogService.createLogger('Main');
@@ -19,7 +19,7 @@ export class Main {
 
             '\n'+
             'ib [OPTION(S)] [list]\n' +
-            '    List inventory items in the collection.\n' +
+            '    List inventory items in the group.\n' +
             '\n'+
 
             'ib [OPTION(S)] [get] UUID|NAME [[OBJ.]KEY[:FORMAT]][ [[OBJ2.]KEY2[:FORMAT]] ...]\n' +
@@ -45,9 +45,9 @@ export class Main {
             '    Defaults to “http://localhost/ib”.\n' +
             '    See also the IB_URL environment option.\n' +
             '\n'+
-            '  --collection=COLLECTION\n' +
-            '    The collection to use. This is by default “hosts”.\n' +
-            '    See also the IB_COLLECTION environment option.\n'
+            '  --group=GROUP\n' +
+            '    The group to use. This is by default “hosts”.\n' +
+            '    See also the IB_GROUP environment option.\n'
         );
 
     }
@@ -69,7 +69,7 @@ export class Main {
 
             case InventoryAction.LOGIN   : return Main.loginAction(parsedArgs);
             case InventoryAction.LOGOUT  : return Main.logoutAction(parsedArgs);
-            case InventoryAction.LIST    : return Main.listCollectionAction(parsedArgs);
+            case InventoryAction.LIST    : return Main.listGroupAction(parsedArgs);
             case InventoryAction.GET     : return Main.getResourceAction(parsedArgs);
             case InventoryAction.SET     : return Main.setResourceAction(parsedArgs);
             case InventoryAction.DELETE  : return Main.deleteResourceAction(parsedArgs);
@@ -89,14 +89,14 @@ export class Main {
         throw new TypeError(`The logout is not supported yet`);
     }
 
-    public static listCollectionAction (parsedArgs : MainArgumentsObject) : Promise<number> {
+    public static listGroupAction (parsedArgs : MainArgumentsObject) : Promise<number> {
 
-        const url        = parsedArgs?.url        ?? IB_URL;
-        const collection = parsedArgs?.collection ?? IB_COLLECTION;
+        const url   = parsedArgs?.url        ?? IB_URL;
+        const group = parsedArgs?.group ?? IB_GROUP;
 
-        return InventoryClientUtils.listCollection({
+        return InventoryClientUtils.listGroup({
             url: url,
-            collection: collection
+            group: group
         }).then((response : InventoryClientListResponse) => {
 
             console.log( Main.stringifyOutput(response?.payload, InventoryOutputFormat.DEFAULT) );
