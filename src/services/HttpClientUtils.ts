@@ -11,13 +11,13 @@ export enum HttpMethod {
     DELETE = 'DELETE'
 }
 
-export interface HttpClientResponseObject {
+export interface HttpResponse<T> {
 
     readonly status  : number;
 
     readonly headers : Record<string, string>;
 
-    readonly data    ?: any;
+    readonly data    : T;
 
 }
 
@@ -56,13 +56,11 @@ export class HttpClientUtils {
 
     }
 
-    public static jsonRequest (method: HttpMethod, url: string, body: any = undefined) : Promise<HttpClientResponseObject> {
+    public static jsonRequest (method: HttpMethod, url: string, body: any = undefined) : Promise<HttpResponse<any>> {
 
         const postDataString : string | undefined = body !== undefined ? this._jsonStringify(body) : undefined;
 
-        LOG.debug('The request data string: ', postDataString);
-        LOG.debug('The request URL method: ', method);
-        LOG.debug('The request URL string: ', url);
+        LOG.debug('The request method / URL / data: ', method, url, postDataString);
 
         const urlObject : URL = new this._URL.URL(url);
 

@@ -1,13 +1,18 @@
 import ProcessUtils from "./services/ProcessUtils";
 import InventoryArgumentService, {
+    InventoryInputType,
     InventoryOutputFormat,
-    MainArgumentsObject
+    MainArgumentsObject, PropertySetAction
 } from "./services/InventoryArgumentService";
-import {some} from "./modules/lodash";
+import {forEach, some} from "./modules/lodash";
 import InventoryAction from "./types/InventoryAction";
-import InventoryClientUtils, {InventoryClientListResponse} from "./services/InventoryClientUtils";
+import InventoryClientUtils, {
+    InventoryClientListResponse,
+    InventoryClientUpdateResponseObject
+} from "./services/InventoryClientUtils";
 import {IB_GROUP, IB_URL} from "./constants/env";
 import LogService from "./services/LogService";
+import InventoryData from "./types/InventoryData";
 
 const LOG = LogService.createLogger('Main');
 
@@ -99,7 +104,7 @@ export class Main {
             group: group
         }).then((response : InventoryClientListResponse) => {
 
-            console.log( Main.stringifyOutput(response?.payload, InventoryOutputFormat.DEFAULT) );
+            console.log( Main.stringifyOutput(response.hosts, InventoryOutputFormat.DEFAULT) );
 
             return 0;
 
@@ -112,7 +117,30 @@ export class Main {
     }
 
     public static setResourceAction (parsedArgs : MainArgumentsObject) : Promise<number> {
-        throw new TypeError(`The logout is not supported yet`);
+
+        const url   = parsedArgs?.url   ?? IB_URL;
+        const group = parsedArgs?.group ?? IB_GROUP;
+        const resource = parsedArgs?.resource;
+        const propertySetActions : Array<PropertySetAction> | undefined = parsedArgs?.propertySetActions;
+
+        if (!resource) throw new TypeError(`No resource name defined.`);
+
+        let data : InventoryData = propertySetActions ? Main._createObjectFromSetActions(propertySetActions, {}) : {};
+
+        return InventoryClientUtils.updateHost({
+            url: url,
+            group: group,
+            resource: resource,
+            data: data
+        }).then((response : InventoryClientUpdateResponseObject) => {
+
+            console.log( Main.stringifyOutput(response.data, InventoryOutputFormat.DEFAULT) );
+
+            return 0;
+
+        });
+
+
     }
 
     public static deleteResourceAction (parsedArgs : MainArgumentsObject) : Promise<number> {
@@ -124,6 +152,14 @@ export class Main {
             return JSON.stringify(value);
         } catch (err) {
             throw new TypeError(`Cannot JSON stringify value "${value}: ${err}`);
+        }
+    }
+
+    private static jsonParseInput ( value : string ) : any {
+        try {
+            return JSON.parse(value);
+        } catch (err) {
+            throw new TypeError(`Cannot parse JSON string "${value}: ${err}`);
         }
     }
 
@@ -162,6 +198,34 @@ export class Main {
 
         throw new TypeError(`The output type "${type}" is not implemented for stringifier.`);
 
+    }
+
+    private static _createObjectFromSetActions (actions : Array<PropertySetAction>, object : InventoryData) : InventoryData {
+
+        forEach(actions, (item: PropertySetAction) => {
+            if (item.key) {
+                object[item.key] = item.value ? Main._createValueFromType(item.value, item.type ?? InventoryInputType.STRING) : undefined;
+            }
+        });
+
+        return object;
+
+    }
+
+    private static _createValueFromType (value : string, type: InventoryInputType) : any {
+        switch (type) {
+
+            case InventoryInputType.STRING  : return value;
+            case InventoryInputType.JSON    : return Main.jsonParseInput(value);
+            case InventoryInputType.OBJECT  : return Main.jsonParseInput(value);
+            case InventoryInputType.ARRAY   : return Main.jsonParseInput(value);
+            case InventoryInputType.BOOLEAN : return Main.jsonParseInput(value);
+            case InventoryInputType.NUMBER  : return Main.jsonParseInput(value);
+            case InventoryInputType.INTEGER : return Main.jsonParseInput(value);
+            case InventoryInputType.NULL    : return null;
+            default                         : throw new TypeError(`Unsupported input type "${type}"`);
+
+        }
     }
 
 }
