@@ -1,6 +1,5 @@
 import InventoryLogLevel from "../types/InventoryLogLevel";
 import {IB_LOG_LEVEL} from "../constants/env";
-import {trim} from "../modules/lodash";
 
 export class Logger {
 

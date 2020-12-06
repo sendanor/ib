@@ -1,9 +1,13 @@
 #!/usr/bin/env node
+
+import ProcessUtils from "./services/ProcessUtils";
+ProcessUtils.initEnvFromDefaultFiles();
+
 import * as HTTP from 'http';
 import * as URL from 'url';
+
 import Main from './Main';
 import HttpClientUtils from "./services/HttpClientUtils";
-import ProcessUtils from "./services/ProcessUtils";
 import LogService from "./services/LogService";
 
 const LOG = LogService.createLogger('ib');
@@ -22,8 +26,6 @@ function handleError (err : any) {
 }
 
 try {
-
-    ProcessUtils.initEnvFromDefaultFiles();
 
     HttpClientUtils.setUrlModule(URL);
 

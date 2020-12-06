@@ -91,8 +91,8 @@ export class Main {
 
     public static listCollectionAction (parsedArgs : MainArgumentsObject) : Promise<number> {
 
-        const url        = parsedArgs.url        ?? IB_URL;
-        const collection = parsedArgs.collection ?? IB_COLLECTION;
+        const url        = parsedArgs?.url        ?? IB_URL;
+        const collection = parsedArgs?.collection ?? IB_COLLECTION;
 
         return InventoryClientUtils.listCollection({
             url: url,
