@@ -7,6 +7,8 @@ import InventoryArgumentService, {
 import {forEach, some} from "./modules/lodash";
 import InventoryAction from "./types/InventoryAction";
 import InventoryClientUtils, {
+    InventoryClientDeleteResponse,
+    InventoryClientFetchResponse, InventoryClientGetResponse,
     InventoryClientListResponse,
     InventoryClientUpdateResponseObject
 } from "./services/InventoryClientUtils";
@@ -99,12 +101,12 @@ export class Main {
         const url   = parsedArgs?.url        ?? IB_URL;
         const group = parsedArgs?.group ?? IB_GROUP;
 
-        return InventoryClientUtils.listGroup({
+        return InventoryClientUtils.listHosts({
             url: url,
             group: group
         }).then((response : InventoryClientListResponse) => {
 
-            console.log( Main.stringifyOutput(response.hosts, InventoryOutputFormat.DEFAULT) );
+            console.log( Main._stringifyOutput(response.hosts, InventoryOutputFormat.DEFAULT) );
 
             return 0;
 
@@ -113,7 +115,23 @@ export class Main {
     }
 
     public static getResourceAction (parsedArgs : MainArgumentsObject) : Promise<number> {
-        throw new TypeError(`The logout is not supported yet`);
+
+        const url      = parsedArgs?.url      ?? IB_URL;
+        const group    = parsedArgs?.group    ?? IB_GROUP;
+        const resource = parsedArgs?.resource ?? IB_GROUP;
+
+        return InventoryClientUtils.getHost({
+            url: url,
+            group: group,
+            resource: resource
+        }).then((response : InventoryClientGetResponse) => {
+
+            console.log( Main._stringifyOutput(response.data, InventoryOutputFormat.DEFAULT) );
+
+            return 0;
+
+        });
+
     }
 
     public static setResourceAction (parsedArgs : MainArgumentsObject) : Promise<number> {
@@ -134,20 +152,36 @@ export class Main {
             data: data
         }).then((response : InventoryClientUpdateResponseObject) => {
 
-            console.log( Main.stringifyOutput(response.data, InventoryOutputFormat.DEFAULT) );
+            console.log( Main._stringifyOutput(response.data, InventoryOutputFormat.DEFAULT) );
 
             return 0;
 
         });
 
-
     }
 
     public static deleteResourceAction (parsedArgs : MainArgumentsObject) : Promise<number> {
-        throw new TypeError(`The logout is not supported yet`);
+
+        const url      = parsedArgs?.url      ?? IB_URL;
+        const group    = parsedArgs?.group    ?? IB_GROUP;
+        const resource = parsedArgs?.resource ?? IB_GROUP;
+
+        return InventoryClientUtils.deleteHost({
+            url: url,
+            group: group,
+            resource: resource
+        }).then((response : InventoryClientDeleteResponse) => {
+
+            console.log( Main._stringifyOutput(response.changed, InventoryOutputFormat.DEFAULT) );
+
+            return 0;
+
+        });
+
     }
 
-    private static jsonStringifyOutput ( value : any ) : string {
+
+    private static _jsonStringifyOutput ( value : any ) : string {
         try {
             return JSON.stringify(value);
         } catch (err) {
@@ -155,7 +189,7 @@ export class Main {
         }
     }
 
-    private static jsonParseInput ( value : string ) : any {
+    private static _jsonParseInput ( value : string ) : any {
         try {
             return JSON.parse(value);
         } catch (err) {
@@ -163,7 +197,7 @@ export class Main {
         }
     }
 
-    private static stringifyOutput (value : any, type : InventoryOutputFormat) : string {
+    private static _stringifyOutput (value : any, type : InventoryOutputFormat) : string {
 
         switch (type) {
 
@@ -171,28 +205,28 @@ export class Main {
                 return `${value}`;
 
             case InventoryOutputFormat.RECORD:
-                return `${ this.jsonStringifyOutput(value) }`;
+                return `${ this._jsonStringifyOutput(value) }`;
 
             case InventoryOutputFormat.JSON:
-                return `${ this.jsonStringifyOutput(value) }`;
+                return `${ this._jsonStringifyOutput(value) }`;
 
             case InventoryOutputFormat.OBJECT:
-                return `${ this.jsonStringifyOutput(value) }`;
+                return `${ this._jsonStringifyOutput(value) }`;
 
             case InventoryOutputFormat.ARRAY:
-                return `${ this.jsonStringifyOutput(value) }`;
+                return `${ this._jsonStringifyOutput(value) }`;
 
             case InventoryOutputFormat.BOOLEAN:
-                return `${ this.jsonStringifyOutput(value) }`;
+                return `${ this._jsonStringifyOutput(value) }`;
 
             case InventoryOutputFormat.NUMBER:
-                return `${ this.jsonStringifyOutput(value) }`;
+                return `${ this._jsonStringifyOutput(value) }`;
 
             case InventoryOutputFormat.INTEGER:
-                return `${ this.jsonStringifyOutput(value) }`;
+                return `${ this._jsonStringifyOutput(value) }`;
 
             case InventoryOutputFormat.DEFAULT:
-                return `${ this.jsonStringifyOutput(value) }`;
+                return `${ this._jsonStringifyOutput(value) }`;
 
         }
 
@@ -216,12 +250,12 @@ export class Main {
         switch (type) {
 
             case InventoryInputType.STRING  : return value;
-            case InventoryInputType.JSON    : return Main.jsonParseInput(value);
-            case InventoryInputType.OBJECT  : return Main.jsonParseInput(value);
-            case InventoryInputType.ARRAY   : return Main.jsonParseInput(value);
-            case InventoryInputType.BOOLEAN : return Main.jsonParseInput(value);
-            case InventoryInputType.NUMBER  : return Main.jsonParseInput(value);
-            case InventoryInputType.INTEGER : return Main.jsonParseInput(value);
+            case InventoryInputType.JSON    : return Main._jsonParseInput(value);
+            case InventoryInputType.OBJECT  : return Main._jsonParseInput(value);
+            case InventoryInputType.ARRAY   : return Main._jsonParseInput(value);
+            case InventoryInputType.BOOLEAN : return Main._jsonParseInput(value);
+            case InventoryInputType.NUMBER  : return Main._jsonParseInput(value);
+            case InventoryInputType.INTEGER : return Main._jsonParseInput(value);
             case InventoryInputType.NULL    : return null;
             default                         : throw new TypeError(`Unsupported input type "${type}"`);
 

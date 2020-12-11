@@ -8,9 +8,9 @@ export declare class Main {
     static getResourceAction(parsedArgs: MainArgumentsObject): Promise<number>;
     static setResourceAction(parsedArgs: MainArgumentsObject): Promise<number>;
     static deleteResourceAction(parsedArgs: MainArgumentsObject): Promise<number>;
-    private static jsonStringifyOutput;
-    private static jsonParseInput;
-    private static stringifyOutput;
+    private static _jsonStringifyOutput;
+    private static _jsonParseInput;
+    private static _stringifyOutput;
     private static _createObjectFromSetActions;
     private static _createValueFromType;
 }

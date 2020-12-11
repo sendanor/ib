@@ -91,16 +91,27 @@ var Main = /** @class */ (function () {
         var _a, _b;
         var url = (_a = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.url) !== null && _a !== void 0 ? _a : env_1.IB_URL;
         var group = (_b = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.group) !== null && _b !== void 0 ? _b : env_1.IB_GROUP;
-        return InventoryClientUtils_1["default"].listGroup({
+        return InventoryClientUtils_1["default"].listHosts({
             url: url,
             group: group
         }).then(function (response) {
-            console.log(Main.stringifyOutput(response.hosts, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT));
+            console.log(Main._stringifyOutput(response.hosts, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT));
             return 0;
         });
     };
     Main.getResourceAction = function (parsedArgs) {
-        throw new TypeError("The logout is not supported yet");
+        var _a, _b, _c;
+        var url = (_a = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.url) !== null && _a !== void 0 ? _a : env_1.IB_URL;
+        var group = (_b = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.group) !== null && _b !== void 0 ? _b : env_1.IB_GROUP;
+        var resource = (_c = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.resource) !== null && _c !== void 0 ? _c : env_1.IB_GROUP;
+        return InventoryClientUtils_1["default"].getHost({
+            url: url,
+            group: group,
+            resource: resource
+        }).then(function (response) {
+            console.log(Main._stringifyOutput(response.data, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT));
+            return 0;
+        });
     };
     Main.setResourceAction = function (parsedArgs) {
         var _a, _b;
@@ -117,14 +128,25 @@ var Main = /** @class */ (function () {
             resource: resource,
             data: data
         }).then(function (response) {
-            console.log(Main.stringifyOutput(response.data, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT));
+            console.log(Main._stringifyOutput(response.data, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT));
             return 0;
         });
     };
     Main.deleteResourceAction = function (parsedArgs) {
-        throw new TypeError("The logout is not supported yet");
+        var _a, _b, _c;
+        var url = (_a = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.url) !== null && _a !== void 0 ? _a : env_1.IB_URL;
+        var group = (_b = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.group) !== null && _b !== void 0 ? _b : env_1.IB_GROUP;
+        var resource = (_c = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.resource) !== null && _c !== void 0 ? _c : env_1.IB_GROUP;
+        return InventoryClientUtils_1["default"].deleteHost({
+            url: url,
+            group: group,
+            resource: resource
+        }).then(function (response) {
+            console.log(Main._stringifyOutput(response.changed, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT));
+            return 0;
+        });
     };
-    Main.jsonStringifyOutput = function (value) {
+    Main._jsonStringifyOutput = function (value) {
         try {
             return JSON.stringify(value);
         }
@@ -132,7 +154,7 @@ var Main = /** @class */ (function () {
             throw new TypeError("Cannot JSON stringify value \"" + value + ": " + err);
         }
     };
-    Main.jsonParseInput = function (value) {
+    Main._jsonParseInput = function (value) {
         try {
             return JSON.parse(value);
         }
@@ -140,26 +162,26 @@ var Main = /** @class */ (function () {
             throw new TypeError("Cannot parse JSON string \"" + value + ": " + err);
         }
     };
-    Main.stringifyOutput = function (value, type) {
+    Main._stringifyOutput = function (value, type) {
         switch (type) {
             case InventoryArgumentService_1.InventoryOutputFormat.STRING:
                 return "" + value;
             case InventoryArgumentService_1.InventoryOutputFormat.RECORD:
-                return "" + this.jsonStringifyOutput(value);
+                return "" + this._jsonStringifyOutput(value);
             case InventoryArgumentService_1.InventoryOutputFormat.JSON:
-                return "" + this.jsonStringifyOutput(value);
+                return "" + this._jsonStringifyOutput(value);
             case InventoryArgumentService_1.InventoryOutputFormat.OBJECT:
-                return "" + this.jsonStringifyOutput(value);
+                return "" + this._jsonStringifyOutput(value);
             case InventoryArgumentService_1.InventoryOutputFormat.ARRAY:
-                return "" + this.jsonStringifyOutput(value);
+                return "" + this._jsonStringifyOutput(value);
             case InventoryArgumentService_1.InventoryOutputFormat.BOOLEAN:
-                return "" + this.jsonStringifyOutput(value);
+                return "" + this._jsonStringifyOutput(value);
             case InventoryArgumentService_1.InventoryOutputFormat.NUMBER:
-                return "" + this.jsonStringifyOutput(value);
+                return "" + this._jsonStringifyOutput(value);
             case InventoryArgumentService_1.InventoryOutputFormat.INTEGER:
-                return "" + this.jsonStringifyOutput(value);
+                return "" + this._jsonStringifyOutput(value);
             case InventoryArgumentService_1.InventoryOutputFormat.DEFAULT:
-                return "" + this.jsonStringifyOutput(value);
+                return "" + this._jsonStringifyOutput(value);
         }
         throw new TypeError("The output type \"" + type + "\" is not implemented for stringifier.");
     };
@@ -175,12 +197,12 @@ var Main = /** @class */ (function () {
     Main._createValueFromType = function (value, type) {
         switch (type) {
             case InventoryArgumentService_1.InventoryInputType.STRING: return value;
-            case InventoryArgumentService_1.InventoryInputType.JSON: return Main.jsonParseInput(value);
-            case InventoryArgumentService_1.InventoryInputType.OBJECT: return Main.jsonParseInput(value);
-            case InventoryArgumentService_1.InventoryInputType.ARRAY: return Main.jsonParseInput(value);
-            case InventoryArgumentService_1.InventoryInputType.BOOLEAN: return Main.jsonParseInput(value);
-            case InventoryArgumentService_1.InventoryInputType.NUMBER: return Main.jsonParseInput(value);
-            case InventoryArgumentService_1.InventoryInputType.INTEGER: return Main.jsonParseInput(value);
+            case InventoryArgumentService_1.InventoryInputType.JSON: return Main._jsonParseInput(value);
+            case InventoryArgumentService_1.InventoryInputType.OBJECT: return Main._jsonParseInput(value);
+            case InventoryArgumentService_1.InventoryInputType.ARRAY: return Main._jsonParseInput(value);
+            case InventoryArgumentService_1.InventoryInputType.BOOLEAN: return Main._jsonParseInput(value);
+            case InventoryArgumentService_1.InventoryInputType.NUMBER: return Main._jsonParseInput(value);
+            case InventoryArgumentService_1.InventoryInputType.INTEGER: return Main._jsonParseInput(value);
             case InventoryArgumentService_1.InventoryInputType.NULL: return null;
             default: throw new TypeError("Unsupported input type \"" + type + "\"");
         }

@@ -7,10 +7,10 @@
     "ib": "./dist/ib.js"
   },
   "scripts": {
-      "start": "node ./dist/ib.js",
-      "build": "tsc",
-      "watch": "tsc --watch",
-      "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node ./dist/ib.js",
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",

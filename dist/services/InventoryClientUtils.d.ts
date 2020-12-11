@@ -30,6 +30,15 @@ export interface InventoryClientListRequestObject {
     readonly url: string;
     readonly group: string;
 }
+export interface InventoryClientFetchRequestObject {
+    readonly url: string;
+    readonly group: string;
+    readonly resource: string;
+}
+export interface InventoryClientFetchResponse {
+    readonly request: InventoryClientFetchRequestObject;
+    readonly data: InventoryData;
+}
 export interface InventoryClientListResponse {
     readonly request: InventoryClientListRequestObject;
     readonly hosts: Array<InventoryData>;
@@ -43,7 +52,7 @@ export interface InventoryClientGetRequestObject {
 }
 export interface InventoryClientGetResponse {
     readonly request: InventoryClientGetRequestObject;
-    readonly payload: Readonly<InventoryData>;
+    readonly data: Readonly<InventoryData>;
 }
 export interface InventoryClientSetRequestObject {
     readonly url: string;
@@ -66,8 +75,9 @@ export interface InventoryClientDeleteResponse {
 }
 export declare class InventoryClientUtils {
     static updateHost(request: InventoryClientUpdateRequestObject): Promise<InventoryClientUpdateResponseObject>;
-    static listGroup(request: InventoryClientListRequestObject): Promise<InventoryClientListResponse>;
-    static fetchResource(request: InventoryClientGetRequestObject): Promise<InventoryClientGetResponse>;
+    static deleteHost(request: InventoryClientDeleteRequestObject): Promise<InventoryClientDeleteResponse>;
+    static listHosts(request: InventoryClientListRequestObject): Promise<InventoryClientListResponse>;
+    static getHost(request: InventoryClientGetRequestObject): Promise<InventoryClientGetResponse>;
     private static q;
 }
 export default InventoryClientUtils;

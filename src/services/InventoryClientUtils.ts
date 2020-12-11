@@ -55,6 +55,21 @@ export interface InventoryClientListRequestObject {
 
 }
 
+export interface InventoryClientFetchRequestObject {
+
+    readonly url      : string;
+    readonly group    : string;
+    readonly resource : string;
+
+}
+
+export interface InventoryClientFetchResponse {
+
+    readonly request    : InventoryClientFetchRequestObject;
+    readonly data       : InventoryData;
+
+}
+
 export interface InventoryClientListResponse {
 
     readonly request    : InventoryClientListRequestObject;
@@ -75,7 +90,7 @@ export interface InventoryClientGetRequestObject {
 export interface InventoryClientGetResponse {
 
     readonly request : InventoryClientGetRequestObject;
-    readonly payload : Readonly<InventoryData>;
+    readonly data    : Readonly<InventoryData>;
 
 }
 
@@ -149,7 +164,29 @@ export class InventoryClientUtils {
 
     }
 
-    public static listGroup (request : InventoryClientListRequestObject) : Promise<InventoryClientListResponse> {
+    public static deleteHost (request : InventoryClientDeleteRequestObject) : Promise<InventoryClientDeleteResponse> {
+
+        AssertUtils.isObject(request);
+        AssertUtils.isString(request.url);
+        AssertUtils.isString(request.group);
+        AssertUtils.isString(request.resource);
+
+        const url = `${ request.url }/${ this.q(request.group) }/${ this.q(request.resource) }`;
+
+        return HttpClientUtils.jsonRequest(HttpMethod.DELETE, url).then((response: HttpResponse<any>) : InventoryClientDeleteResponse => {
+
+            const payload = response?.data?.payload ?? undefined;
+
+            return {
+                request: request,
+                changed: payload.changed
+            };
+
+        });
+
+    }
+
+    public static listHosts (request : InventoryClientListRequestObject) : Promise<InventoryClientListResponse> {
 
         AssertUtils.isObject(request);
         AssertUtils.isString(request.url);
@@ -179,7 +216,7 @@ export class InventoryClientUtils {
 
     }
 
-    public static fetchResource (request : InventoryClientGetRequestObject) : Promise<InventoryClientGetResponse> {
+    public static getHost (request : InventoryClientGetRequestObject) : Promise<InventoryClientGetResponse> {
 
         AssertUtils.isObject(request);
         AssertUtils.isString(request.url);
@@ -193,8 +230,8 @@ export class InventoryClientUtils {
             const payload = response?.data?.payload ?? undefined;
 
             return {
-                request: request,
-                payload
+                request : request,
+                data    : payload.data
             };
 
         });

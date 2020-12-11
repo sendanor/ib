@@ -1,12 +1,12 @@
 
 export enum InventoryAction {
 
-    LOGIN = 'LOGIN',
-    LOGOUT = 'LOGOUT',
-    LIST = 'LIST',
-    GET = 'GET',
-    SET = 'SET',
-    DELETE = 'DELETE'
+    LOGIN   = 'LOGIN',
+    LOGOUT  = 'LOGOUT',
+    LIST    = 'LIST',
+    GET     = 'GET',
+    SET     = 'SET',
+    DELETE  = 'DELETE'
 
 }
 

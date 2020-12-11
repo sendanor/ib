@@ -56,7 +56,22 @@ var InventoryClientUtils = /** @class */ (function () {
             };
         });
     };
-    InventoryClientUtils.listGroup = function (request) {
+    InventoryClientUtils.deleteHost = function (request) {
+        AssertUtils_1["default"].isObject(request);
+        AssertUtils_1["default"].isString(request.url);
+        AssertUtils_1["default"].isString(request.group);
+        AssertUtils_1["default"].isString(request.resource);
+        var url = request.url + "/" + this.q(request.group) + "/" + this.q(request.resource);
+        return HttpClientUtils_1["default"].jsonRequest(HttpClientUtils_1.HttpMethod.DELETE, url).then(function (response) {
+            var _a, _b;
+            var payload = (_b = (_a = response === null || response === void 0 ? void 0 : response.data) === null || _a === void 0 ? void 0 : _a.payload) !== null && _b !== void 0 ? _b : undefined;
+            return {
+                request: request,
+                changed: payload.changed
+            };
+        });
+    };
+    InventoryClientUtils.listHosts = function (request) {
         AssertUtils_1["default"].isObject(request);
         AssertUtils_1["default"].isString(request.url);
         AssertUtils_1["default"].isString(request.group);
@@ -76,7 +91,7 @@ var InventoryClientUtils = /** @class */ (function () {
             };
         });
     };
-    InventoryClientUtils.fetchResource = function (request) {
+    InventoryClientUtils.getHost = function (request) {
         AssertUtils_1["default"].isObject(request);
         AssertUtils_1["default"].isString(request.url);
         AssertUtils_1["default"].isString(request.group);
@@ -87,7 +102,7 @@ var InventoryClientUtils = /** @class */ (function () {
             var payload = (_b = (_a = response === null || response === void 0 ? void 0 : response.data) === null || _a === void 0 ? void 0 : _a.payload) !== null && _b !== void 0 ? _b : undefined;
             return {
                 request: request,
-                payload: payload
+                data: payload.data
             };
         });
     };
