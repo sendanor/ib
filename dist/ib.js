@@ -25,6 +25,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 exports.__esModule = true;
 var ProcessUtils_1 = __importDefault(require("./services/ProcessUtils"));
+// Must be first line to load the ENV
 ProcessUtils_1["default"].initEnvFromDefaultFiles();
 var HTTP = __importStar(require("http"));
 var URL = __importStar(require("url"));

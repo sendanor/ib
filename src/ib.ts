@@ -2,6 +2,8 @@
 // Copyright (c) 2020 Sendanor. All rights reserved.
 
 import ProcessUtils from "./services/ProcessUtils";
+
+// Must be first line to load the ENV
 ProcessUtils.initEnvFromDefaultFiles();
 
 import * as HTTP from 'http';
