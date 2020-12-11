@@ -32,7 +32,7 @@ export interface BackendResponse<T> {
 export interface InventoryClientUpdateRequestObject {
 
     readonly url      : string;
-    readonly group    : string;
+    readonly domain    : string;
     readonly resource : string;
     readonly data     : InventoryData;
 
@@ -51,14 +51,14 @@ export interface InventoryClientUpdateResponseObject {
 export interface InventoryClientListRequestObject {
 
     readonly url   : string;
-    readonly group : string;
+    readonly domain : string;
 
 }
 
 export interface InventoryClientFetchRequestObject {
 
     readonly url      : string;
-    readonly group    : string;
+    readonly domain    : string;
     readonly resource : string;
 
 }
@@ -82,7 +82,7 @@ export interface InventoryClientListResponse {
 export interface InventoryClientGetRequestObject {
 
     readonly url        : string;
-    readonly group      : string;
+    readonly domain      : string;
     readonly resource   : string;
 
 }
@@ -97,7 +97,7 @@ export interface InventoryClientGetResponse {
 export interface InventoryClientSetRequestObject {
 
     readonly url        : string;
-    readonly group : string;
+    readonly domain : string;
     readonly resource   : string;
 
 }
@@ -113,7 +113,7 @@ export interface InventoryClientSetResponse {
 export interface InventoryClientDeleteRequestObject {
 
     readonly url        : string;
-    readonly group : string;
+    readonly domain : string;
     readonly resource   : string;
 
 }
@@ -132,10 +132,10 @@ export class InventoryClientUtils {
         AssertUtils.isObject(request);
         AssertUtils.isObject(request.data);
         AssertUtils.isString(request.url);
-        AssertUtils.isString(request.group);
+        AssertUtils.isString(request.domain);
         AssertUtils.isString(request.resource);
 
-        const url = `${ request.url }/${ this.q(request.group) }`;
+        const url = `${ request.url }/${ this.q(request.domain) }`;
 
         const name = request?.resource;
 
@@ -168,10 +168,10 @@ export class InventoryClientUtils {
 
         AssertUtils.isObject(request);
         AssertUtils.isString(request.url);
-        AssertUtils.isString(request.group);
+        AssertUtils.isString(request.domain);
         AssertUtils.isString(request.resource);
 
-        const url = `${ request.url }/${ this.q(request.group) }/${ this.q(request.resource) }`;
+        const url = `${ request.url }/${ this.q(request.domain) }/${ this.q(request.resource) }`;
 
         return HttpClientUtils.jsonRequest(HttpMethod.DELETE, url).then((response: HttpResponse<any>) : InventoryClientDeleteResponse => {
 
@@ -190,13 +190,13 @@ export class InventoryClientUtils {
 
         AssertUtils.isObject(request);
         AssertUtils.isString(request.url);
-        AssertUtils.isString(request.group);
+        AssertUtils.isString(request.domain);
 
         // FIXME: Add support for changing these from the command line
         const page = 1;
         const size = 10;
 
-        const url = `${ request.url }/${ this.q(request.group) }?page=${this.q(''+page)}&size=${this.q(''+size)}`;
+        const url = `${ request.url }/${ this.q(request.domain) }?page=${this.q(''+page)}&size=${this.q(''+size)}`;
 
         return HttpClientUtils.jsonRequest(HttpMethod.GET, url).then((response: HttpResponse<BackendResponse<ListPayload<InventoryData>>>) : InventoryClientListResponse => {
 
@@ -220,10 +220,10 @@ export class InventoryClientUtils {
 
         AssertUtils.isObject(request);
         AssertUtils.isString(request.url);
-        AssertUtils.isString(request.group);
+        AssertUtils.isString(request.domain);
         AssertUtils.isString(request.resource);
 
-        const url = `${ request.url }/${ this.q(request.group) }/${ this.q(request.resource) }`;
+        const url = `${ request.url }/${ this.q(request.domain) }/${ this.q(request.resource) }`;
 
         return HttpClientUtils.jsonRequest(HttpMethod.GET, url).then((response: HttpResponse<any>) : InventoryClientGetResponse => {
 

@@ -34,38 +34,62 @@ var LOG = LogService_1["default"].createLogger('Main');
 var Main = /** @class */ (function () {
     function Main() {
     }
-    Main.printUsage = function () {
+    Main.printFullUsage = function () {
         console.log('\n' +
             'ib [OPTION(S)] [list]\n' +
-            '    List inventory items in the group.\n' +
+            '\n' +
+            '    List inventory items in the domain.\n' +
             '\n' +
             'ib [OPTION(S)] [get] UUID|NAME [[OBJ.]KEY[:FORMAT]][ [[OBJ2.]KEY2[:FORMAT]] ...]\n' +
+            '\n' +
             '    Fetch the inventory object (or specific properties from it).\n' +
+            '\n' +
             '    If properties are defined, only those will be returned, one at a line.\n' +
+            '\n' +
             '    See also Output Formats for FORMAT.\n' +
             '\n' +
-            'ib [OPTION(S)] [set] UUID|NAME [OBJ.]KEY[:TYPE]=VALUE\n' +
+            'ib [OPTION(S)] [set] UUID|NAME [OBJ.]KEY[:TYPE]=VALUE [[OBJ2.]KEY2[:TYPE2]=VALUE2 ...]\n' +
+            '\n' +
             '    Set a property in a host object.\n' +
+            '\n' +
             '    See also Input Types for TYPE.\n' +
             '\n' +
             'ib [OPTION(S)] delete UUID|NAME\n' +
+            '\n' +
             '    Delete a host object\n' +
             '\n' +
             'Where OPTION(S) are:\n' +
             '\n' +
             '  --url=URL\n' +
+            '\n' +
             '    The URL to the backend.\n' +
+            '\n' +
             '    Defaults to “http://localhost/ib”.\n' +
+            '\n' +
             '    See also the IB_URL environment option.\n' +
             '\n' +
-            '  --group=GROUP\n' +
-            '    The group to use. This is by default “hosts”.\n' +
-            '    See also the IB_GROUP environment option.\n');
+            '  --domain=DOMAIN\n' +
+            '\n' +
+            '    The domain to use. This is by default “hosts”.\n' +
+            '\n' +
+            '    See also the IB_DOMAIN environment option.\n');
+    };
+    Main.printShortUsage = function () {
+        console.log('\n' +
+            'ib [OPTION(S)] [list]\n' +
+            '\n' +
+            'ib [OPTION(S)] [get] UUID|NAME [[OBJ.]KEY[:FORMAT]][ [[OBJ2.]KEY2[:FORMAT]] ...]\n' +
+            '\n' +
+            'ib [OPTION(S)] [set] UUID|NAME [OBJ.]KEY[:TYPE]=VALUE [[OBJ2.]KEY2[:TYPE2]=VALUE2 ...]\n' +
+            '\n' +
+            'ib [OPTION(S)] delete UUID|NAME\n' +
+            '\n' +
+            'Check \'ib --help\' for full usage.\n');
     };
     Main.run = function () {
         var args = ProcessUtils_1["default"].getArguments();
         if (lodash_1.some(args, function (item) { return item === '--help' || item === '-h'; })) {
-            Main.printUsage();
+            Main.printFullUsage();
             return Promise.resolve(0);
         }
         var parsedArgs = InventoryArgumentService_1["default"].parseInventoryArguments(args);
@@ -73,7 +97,7 @@ var Main = /** @class */ (function () {
         switch (parsedArgs.action) {
             case InventoryAction_1["default"].LOGIN: return Main.loginAction(parsedArgs);
             case InventoryAction_1["default"].LOGOUT: return Main.logoutAction(parsedArgs);
-            case InventoryAction_1["default"].LIST: return Main.listGroupAction(parsedArgs);
+            case InventoryAction_1["default"].LIST: return Main.listHostsAction(parsedArgs);
             case InventoryAction_1["default"].GET: return Main.getResourceAction(parsedArgs);
             case InventoryAction_1["default"].SET: return Main.setResourceAction(parsedArgs);
             case InventoryAction_1["default"].DELETE: return Main.deleteResourceAction(parsedArgs);
@@ -87,13 +111,13 @@ var Main = /** @class */ (function () {
     Main.logoutAction = function (parsedArgs) {
         throw new TypeError("The logout is not supported yet");
     };
-    Main.listGroupAction = function (parsedArgs) {
+    Main.listHostsAction = function (parsedArgs) {
         var _a, _b;
         var url = (_a = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.url) !== null && _a !== void 0 ? _a : env_1.IB_URL;
-        var group = (_b = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.group) !== null && _b !== void 0 ? _b : env_1.IB_GROUP;
+        var domain = (_b = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.domain) !== null && _b !== void 0 ? _b : env_1.IB_DOMAIN;
         return InventoryClientUtils_1["default"].listHosts({
             url: url,
-            group: group
+            domain: domain
         }).then(function (response) {
             console.log(Main._stringifyOutput(response.hosts, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT));
             return 0;
@@ -102,11 +126,11 @@ var Main = /** @class */ (function () {
     Main.getResourceAction = function (parsedArgs) {
         var _a, _b, _c;
         var url = (_a = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.url) !== null && _a !== void 0 ? _a : env_1.IB_URL;
-        var group = (_b = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.group) !== null && _b !== void 0 ? _b : env_1.IB_GROUP;
-        var resource = (_c = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.resource) !== null && _c !== void 0 ? _c : env_1.IB_GROUP;
+        var domain = (_b = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.domain) !== null && _b !== void 0 ? _b : env_1.IB_DOMAIN;
+        var resource = (_c = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.resource) !== null && _c !== void 0 ? _c : env_1.IB_DOMAIN;
         return InventoryClientUtils_1["default"].getHost({
             url: url,
-            group: group,
+            domain: domain,
             resource: resource
         }).then(function (response) {
             console.log(Main._stringifyOutput(response.data, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT));
@@ -116,7 +140,7 @@ var Main = /** @class */ (function () {
     Main.setResourceAction = function (parsedArgs) {
         var _a, _b;
         var url = (_a = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.url) !== null && _a !== void 0 ? _a : env_1.IB_URL;
-        var group = (_b = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.group) !== null && _b !== void 0 ? _b : env_1.IB_GROUP;
+        var domain = (_b = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.domain) !== null && _b !== void 0 ? _b : env_1.IB_DOMAIN;
         var resource = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.resource;
         var propertySetActions = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.propertySetActions;
         if (!resource)
@@ -124,7 +148,7 @@ var Main = /** @class */ (function () {
         var data = propertySetActions ? Main._createObjectFromSetActions(propertySetActions, {}) : {};
         return InventoryClientUtils_1["default"].updateHost({
             url: url,
-            group: group,
+            domain: domain,
             resource: resource,
             data: data
         }).then(function (response) {
@@ -135,11 +159,11 @@ var Main = /** @class */ (function () {
     Main.deleteResourceAction = function (parsedArgs) {
         var _a, _b, _c;
         var url = (_a = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.url) !== null && _a !== void 0 ? _a : env_1.IB_URL;
-        var group = (_b = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.group) !== null && _b !== void 0 ? _b : env_1.IB_GROUP;
-        var resource = (_c = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.resource) !== null && _c !== void 0 ? _c : env_1.IB_GROUP;
+        var domain = (_b = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.domain) !== null && _b !== void 0 ? _b : env_1.IB_DOMAIN;
+        var resource = (_c = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.resource) !== null && _c !== void 0 ? _c : env_1.IB_DOMAIN;
         return InventoryClientUtils_1["default"].deleteHost({
             url: url,
-            group: group,
+            domain: domain,
             resource: resource
         }).then(function (response) {
             console.log(Main._stringifyOutput(response.changed, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT));

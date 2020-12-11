@@ -4,14 +4,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 var _a, _b, _c, _d, _e, _f;
 exports.__esModule = true;
-exports.IB_LOG_LEVEL = exports.IB_URL = exports.IB_GROUP = void 0;
+exports.IB_LOG_LEVEL = exports.IB_URL = exports.IB_DOMAIN = void 0;
 var LogUtils_1 = __importDefault(require("../services/LogUtils"));
 /**
- * The default collection to use.
+ * The default resource domain to use.
  *
  * This defaults to "hosts".
  */
-exports.IB_GROUP = (_b = (_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.IB_GROUP) !== null && _b !== void 0 ? _b : "hosts";
+exports.IB_DOMAIN = (_b = (_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.IB_DOMAIN) !== null && _b !== void 0 ? _b : "hosts";
 /**
  * The default URL to use to the backend.
  *

@@ -16,7 +16,7 @@ export interface BackendResponse<T> {
 }
 export interface InventoryClientUpdateRequestObject {
     readonly url: string;
-    readonly group: string;
+    readonly domain: string;
     readonly resource: string;
     readonly data: InventoryData;
 }
@@ -28,11 +28,11 @@ export interface InventoryClientUpdateResponseObject {
 }
 export interface InventoryClientListRequestObject {
     readonly url: string;
-    readonly group: string;
+    readonly domain: string;
 }
 export interface InventoryClientFetchRequestObject {
     readonly url: string;
-    readonly group: string;
+    readonly domain: string;
     readonly resource: string;
 }
 export interface InventoryClientFetchResponse {
@@ -47,7 +47,7 @@ export interface InventoryClientListResponse {
 }
 export interface InventoryClientGetRequestObject {
     readonly url: string;
-    readonly group: string;
+    readonly domain: string;
     readonly resource: string;
 }
 export interface InventoryClientGetResponse {
@@ -56,7 +56,7 @@ export interface InventoryClientGetResponse {
 }
 export interface InventoryClientSetRequestObject {
     readonly url: string;
-    readonly group: string;
+    readonly domain: string;
     readonly resource: string;
 }
 export interface InventoryClientSetResponse {
@@ -66,7 +66,7 @@ export interface InventoryClientSetResponse {
 }
 export interface InventoryClientDeleteRequestObject {
     readonly url: string;
-    readonly group: string;
+    readonly domain: string;
     readonly resource: string;
 }
 export interface InventoryClientDeleteResponse {

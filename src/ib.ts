@@ -19,7 +19,7 @@ function handleError (err : any) {
     // Enable later when there is a support for debug flag
     LOG.debug('Exception: ', err);
 
-    Main.printUsage();
+    Main.printShortUsage();
 
     process.exit(2);
 

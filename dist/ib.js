@@ -36,7 +36,7 @@ function handleError(err) {
     console.error('ERROR: ' + ((_a = err === null || err === void 0 ? void 0 : err.message) !== null && _a !== void 0 ? _a : '' + err));
     // Enable later when there is a support for debug flag
     LOG.debug('Exception: ', err);
-    Main_1["default"].printUsage();
+    Main_1["default"].printShortUsage();
     process.exit(2);
 }
 try {

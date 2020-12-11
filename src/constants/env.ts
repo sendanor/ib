@@ -2,11 +2,11 @@ import InventoryLogLevel from "../types/InventoryLogLevel";
 import LogUtils from "../services/LogUtils";
 
 /**
- * The default collection to use.
+ * The default resource domain to use.
  *
  * This defaults to "hosts".
  */
-export const IB_GROUP : string = process?.env?.IB_GROUP ?? "hosts";
+export const IB_DOMAIN : string = process?.env?.IB_DOMAIN ?? "hosts";
 
 /**
  * The default URL to use to the backend.

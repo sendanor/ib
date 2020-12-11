@@ -34,9 +34,9 @@ var InventoryClientUtils = /** @class */ (function () {
         AssertUtils_1["default"].isObject(request);
         AssertUtils_1["default"].isObject(request.data);
         AssertUtils_1["default"].isString(request.url);
-        AssertUtils_1["default"].isString(request.group);
+        AssertUtils_1["default"].isString(request.domain);
         AssertUtils_1["default"].isString(request.resource);
-        var url = request.url + "/" + this.q(request.group);
+        var url = request.url + "/" + this.q(request.domain);
         var name = request === null || request === void 0 ? void 0 : request.resource;
         if (!name)
             throw new TypeError('The resource name is required.');
@@ -59,9 +59,9 @@ var InventoryClientUtils = /** @class */ (function () {
     InventoryClientUtils.deleteHost = function (request) {
         AssertUtils_1["default"].isObject(request);
         AssertUtils_1["default"].isString(request.url);
-        AssertUtils_1["default"].isString(request.group);
+        AssertUtils_1["default"].isString(request.domain);
         AssertUtils_1["default"].isString(request.resource);
-        var url = request.url + "/" + this.q(request.group) + "/" + this.q(request.resource);
+        var url = request.url + "/" + this.q(request.domain) + "/" + this.q(request.resource);
         return HttpClientUtils_1["default"].jsonRequest(HttpClientUtils_1.HttpMethod.DELETE, url).then(function (response) {
             var _a, _b;
             var payload = (_b = (_a = response === null || response === void 0 ? void 0 : response.data) === null || _a === void 0 ? void 0 : _a.payload) !== null && _b !== void 0 ? _b : undefined;
@@ -74,11 +74,11 @@ var InventoryClientUtils = /** @class */ (function () {
     InventoryClientUtils.listHosts = function (request) {
         AssertUtils_1["default"].isObject(request);
         AssertUtils_1["default"].isString(request.url);
-        AssertUtils_1["default"].isString(request.group);
+        AssertUtils_1["default"].isString(request.domain);
         // FIXME: Add support for changing these from the command line
         var page = 1;
         var size = 10;
-        var url = request.url + "/" + this.q(request.group) + "?page=" + this.q('' + page) + "&size=" + this.q('' + size);
+        var url = request.url + "/" + this.q(request.domain) + "?page=" + this.q('' + page) + "&size=" + this.q('' + size);
         return HttpClientUtils_1["default"].jsonRequest(HttpClientUtils_1.HttpMethod.GET, url).then(function (response) {
             LOG.debug('response = ', response);
             var data = response.data;
@@ -94,9 +94,9 @@ var InventoryClientUtils = /** @class */ (function () {
     InventoryClientUtils.getHost = function (request) {
         AssertUtils_1["default"].isObject(request);
         AssertUtils_1["default"].isString(request.url);
-        AssertUtils_1["default"].isString(request.group);
+        AssertUtils_1["default"].isString(request.domain);
         AssertUtils_1["default"].isString(request.resource);
-        var url = request.url + "/" + this.q(request.group) + "/" + this.q(request.resource);
+        var url = request.url + "/" + this.q(request.domain) + "/" + this.q(request.resource);
         return HttpClientUtils_1["default"].jsonRequest(HttpClientUtils_1.HttpMethod.GET, url).then(function (response) {
             var _a, _b;
             var payload = (_b = (_a = response === null || response === void 0 ? void 0 : response.data) === null || _a === void 0 ? void 0 : _a.payload) !== null && _b !== void 0 ? _b : undefined;

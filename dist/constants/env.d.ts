@@ -1,10 +1,10 @@
 import InventoryLogLevel from "../types/InventoryLogLevel";
 /**
- * The default collection to use.
+ * The default resource domain to use.
  *
  * This defaults to "hosts".
  */
-export declare const IB_GROUP: string;
+export declare const IB_DOMAIN: string;
 /**
  * The default URL to use to the backend.
  *

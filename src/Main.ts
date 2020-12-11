@@ -12,7 +12,7 @@ import InventoryClientUtils, {
     InventoryClientListResponse,
     InventoryClientUpdateResponseObject
 } from "./services/InventoryClientUtils";
-import {IB_GROUP, IB_URL} from "./constants/env";
+import {IB_DOMAIN, IB_URL} from "./constants/env";
 import LogService from "./services/LogService";
 import InventoryData from "./types/InventoryData";
 
@@ -20,27 +20,34 @@ const LOG = LogService.createLogger('Main');
 
 export class Main {
 
-    public static printUsage () {
+    public static printFullUsage () {
 
         console.log(
 
             '\n'+
             'ib [OPTION(S)] [list]\n' +
-            '    List inventory items in the group.\n' +
+            '\n'+
+            '    List inventory items in the domain.\n' +
             '\n'+
 
             'ib [OPTION(S)] [get] UUID|NAME [[OBJ.]KEY[:FORMAT]][ [[OBJ2.]KEY2[:FORMAT]] ...]\n' +
+            '\n'+
             '    Fetch the inventory object (or specific properties from it).\n' +
+            '\n'+
             '    If properties are defined, only those will be returned, one at a line.\n' +
+            '\n'+
             '    See also Output Formats for FORMAT.\n' +
             '\n'+
 
-            'ib [OPTION(S)] [set] UUID|NAME [OBJ.]KEY[:TYPE]=VALUE\n' +
+            'ib [OPTION(S)] [set] UUID|NAME [OBJ.]KEY[:TYPE]=VALUE [[OBJ2.]KEY2[:TYPE2]=VALUE2 ...]\n' +
+            '\n'+
             '    Set a property in a host object.\n' +
+            '\n'+
             '    See also Input Types for TYPE.\n' +
             '\n'+
 
             'ib [OPTION(S)] delete UUID|NAME\n' +
+            '\n'+
             '    Delete a host object\n' +
             '\n'+
 
@@ -48,13 +55,40 @@ export class Main {
             '\n'+
 
             '  --url=URL\n' +
+            '\n'+
             '    The URL to the backend.\n' +
+            '\n'+
             '    Defaults to “http://localhost/ib”.\n' +
+            '\n'+
             '    See also the IB_URL environment option.\n' +
             '\n'+
-            '  --group=GROUP\n' +
-            '    The group to use. This is by default “hosts”.\n' +
-            '    See also the IB_GROUP environment option.\n'
+            '  --domain=DOMAIN\n' +
+            '\n'+
+            '    The domain to use. This is by default “hosts”.\n' +
+            '\n'+
+            '    See also the IB_DOMAIN environment option.\n'
+        );
+
+    }
+
+    public static printShortUsage () {
+
+        console.log(
+
+            '\n'+
+            'ib [OPTION(S)] [list]\n' +
+            '\n'+
+
+            'ib [OPTION(S)] [get] UUID|NAME [[OBJ.]KEY[:FORMAT]][ [[OBJ2.]KEY2[:FORMAT]] ...]\n' +
+            '\n'+
+
+            'ib [OPTION(S)] [set] UUID|NAME [OBJ.]KEY[:TYPE]=VALUE [[OBJ2.]KEY2[:TYPE2]=VALUE2 ...]\n' +
+            '\n'+
+
+            'ib [OPTION(S)] delete UUID|NAME\n' +
+            '\n'+
+
+            'Check \'ib --help\' for full usage.\n'
         );
 
     }
@@ -64,7 +98,7 @@ export class Main {
         const args = ProcessUtils.getArguments();
 
         if (some(args, (item: string) => item === '--help' || item === '-h')) {
-            Main.printUsage();
+            Main.printFullUsage();
             return Promise.resolve(0);
         }
 
@@ -76,7 +110,7 @@ export class Main {
 
             case InventoryAction.LOGIN   : return Main.loginAction(parsedArgs);
             case InventoryAction.LOGOUT  : return Main.logoutAction(parsedArgs);
-            case InventoryAction.LIST    : return Main.listGroupAction(parsedArgs);
+            case InventoryAction.LIST    : return Main.listHostsAction(parsedArgs);
             case InventoryAction.GET     : return Main.getResourceAction(parsedArgs);
             case InventoryAction.SET     : return Main.setResourceAction(parsedArgs);
             case InventoryAction.DELETE  : return Main.deleteResourceAction(parsedArgs);
@@ -96,14 +130,14 @@ export class Main {
         throw new TypeError(`The logout is not supported yet`);
     }
 
-    public static listGroupAction (parsedArgs : MainArgumentsObject) : Promise<number> {
+    public static listHostsAction (parsedArgs : MainArgumentsObject) : Promise<number> {
 
-        const url   = parsedArgs?.url        ?? IB_URL;
-        const group = parsedArgs?.group ?? IB_GROUP;
+        const url    = parsedArgs?.url        ?? IB_URL;
+        const domain = parsedArgs?.domain ?? IB_DOMAIN;
 
         return InventoryClientUtils.listHosts({
             url: url,
-            group: group
+            domain: domain
         }).then((response : InventoryClientListResponse) => {
 
             console.log( Main._stringifyOutput(response.hosts, InventoryOutputFormat.DEFAULT) );
@@ -117,12 +151,12 @@ export class Main {
     public static getResourceAction (parsedArgs : MainArgumentsObject) : Promise<number> {
 
         const url      = parsedArgs?.url      ?? IB_URL;
-        const group    = parsedArgs?.group    ?? IB_GROUP;
-        const resource = parsedArgs?.resource ?? IB_GROUP;
+        const domain    = parsedArgs?.domain    ?? IB_DOMAIN;
+        const resource = parsedArgs?.resource ?? IB_DOMAIN;
 
         return InventoryClientUtils.getHost({
             url: url,
-            group: group,
+            domain: domain,
             resource: resource
         }).then((response : InventoryClientGetResponse) => {
 
@@ -137,7 +171,7 @@ export class Main {
     public static setResourceAction (parsedArgs : MainArgumentsObject) : Promise<number> {
 
         const url   = parsedArgs?.url   ?? IB_URL;
-        const group = parsedArgs?.group ?? IB_GROUP;
+        const domain = parsedArgs?.domain ?? IB_DOMAIN;
         const resource = parsedArgs?.resource;
         const propertySetActions : Array<PropertySetAction> | undefined = parsedArgs?.propertySetActions;
 
@@ -147,7 +181,7 @@ export class Main {
 
         return InventoryClientUtils.updateHost({
             url: url,
-            group: group,
+            domain: domain,
             resource: resource,
             data: data
         }).then((response : InventoryClientUpdateResponseObject) => {
@@ -163,12 +197,12 @@ export class Main {
     public static deleteResourceAction (parsedArgs : MainArgumentsObject) : Promise<number> {
 
         const url      = parsedArgs?.url      ?? IB_URL;
-        const group    = parsedArgs?.group    ?? IB_GROUP;
-        const resource = parsedArgs?.resource ?? IB_GROUP;
+        const domain    = parsedArgs?.domain    ?? IB_DOMAIN;
+        const resource = parsedArgs?.resource ?? IB_DOMAIN;
 
         return InventoryClientUtils.deleteHost({
             url: url,
-            group: group,
+            domain: domain,
             resource: resource
         }).then((response : InventoryClientDeleteResponse) => {
 

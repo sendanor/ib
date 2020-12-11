@@ -22,7 +22,7 @@ export declare enum InventoryInputType {
 }
 export declare enum InventoryOptionKey {
     URL = "url",
-    GROUP = "group"
+    DOMAIN = "domain"
 }
 export interface PropertyGetAction {
     readonly key?: string;
@@ -35,7 +35,7 @@ export interface PropertySetAction {
 }
 export interface MainArgumentsObject {
     readonly action?: InventoryAction;
-    readonly group?: string;
+    readonly domain?: string;
     readonly url?: string;
     readonly resource?: string;
     readonly propertyGetActions?: Array<PropertyGetAction>;

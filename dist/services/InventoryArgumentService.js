@@ -45,7 +45,7 @@ var InventoryInputType;
 var InventoryOptionKey;
 (function (InventoryOptionKey) {
     InventoryOptionKey["URL"] = "url";
-    InventoryOptionKey["GROUP"] = "group";
+    InventoryOptionKey["DOMAIN"] = "domain";
 })(InventoryOptionKey = exports.InventoryOptionKey || (exports.InventoryOptionKey = {}));
 var InventoryArgumentService = /** @class */ (function () {
     function InventoryArgumentService() {
@@ -78,8 +78,8 @@ var InventoryArgumentService = /** @class */ (function () {
                     case InventoryOptionKey.URL:
                         result = __assign(__assign({}, result), { url: value });
                         break;
-                    case InventoryOptionKey.GROUP:
-                        result = __assign(__assign({}, result), { group: value });
+                    case InventoryOptionKey.DOMAIN:
+                        result = __assign(__assign({}, result), { domain: value });
                         break;
                     default:
                         throw new TypeError("The option was not implemented: \"" + optKey + "\"");
