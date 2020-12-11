@@ -1,4 +1,5 @@
 "use strict";
+// Copyright (c) 2020 Sendanor. All rights reserved.
 var __assign = (this && this.__assign) || function () {
     __assign = Object.assign || function(t) {
         for (var s, i = 1, n = arguments.length; i < n; i++) {

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// Copyright (c) 2020 Sendanor. All rights reserved.
 
 import ProcessUtils from "./services/ProcessUtils";
 ProcessUtils.initEnvFromDefaultFiles();

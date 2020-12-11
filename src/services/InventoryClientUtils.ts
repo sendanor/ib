@@ -1,3 +1,5 @@
+// Copyright (c) 2020 Sendanor. All rights reserved.
+
 import HttpClientUtils, {HttpResponse, HttpMethod} from "./HttpClientUtils";
 import AssertUtils from "./AssertUtils";
 import LogService from "./LogService";

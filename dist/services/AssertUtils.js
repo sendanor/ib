@@ -1,4 +1,5 @@
 "use strict";
+// Copyright (c) 2020 Sendanor. All rights reserved.
 exports.__esModule = true;
 exports.AssertUtils = exports.Test = void 0;
 var lodash_1 = require("../modules/lodash");
