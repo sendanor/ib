@@ -71,6 +71,7 @@ var InventoryArgumentService = /** @class */ (function () {
         // Parse options
         if (lodash_1.startsWith(item, '--')) {
             var valueKeyIndex = item.indexOf('=');
+            '';
             var hasValue = valueKeyIndex >= 0;
             var optKey = item.substr('--'.length, hasValue ? valueKeyIndex - '--'.length : item.length - 2);
             var value = hasValue ? item.substr(valueKeyIndex + 1) : '';

@@ -96,7 +96,7 @@ export class InventoryArgumentService {
         if (startsWith(item, '--')) {
 
             const valueKeyIndex : number = item.indexOf('=');
-
+''
             const hasValue : boolean = valueKeyIndex >= 0;
 
             const optKey : string | InventoryOptionKey = item.substr('--'.length, hasValue ? valueKeyIndex - '--'.length : item.length - 2);

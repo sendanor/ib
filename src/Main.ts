@@ -4,9 +4,9 @@ import ProcessUtils from "./services/ProcessUtils";
 import InventoryArgumentService, {
     InventoryInputType,
     InventoryOutputFormat,
-    MainArgumentsObject, PropertySetAction
+    MainArgumentsObject, PropertyGetAction, PropertySetAction
 } from "./services/InventoryArgumentService";
-import {forEach, isArray, isObject, isString, keys, map, reduce, some} from "./modules/lodash";
+import {forEach, has, isArray, isObject, isString, keys, map, reduce, some} from "./modules/lodash";
 import InventoryAction from "./types/InventoryAction";
 import InventoryClientUtils, {
     InventoryDeleteResponse,
@@ -157,7 +157,7 @@ export class Main {
             domain : domain
         }).then((response : InventoryListResponse) => {
 
-            console.log( Main._stringifyOutput(response.items, InventoryOutputFormat.RECORD) );
+            console.log( Main._stringifyOutput(response.items, InventoryOutputFormat.DEFAULT) );
 
             return 0;
 
@@ -168,8 +168,10 @@ export class Main {
     public static getResourceAction (parsedArgs : MainArgumentsObject) : Promise<number> {
 
         const url      = parsedArgs?.url      ?? IB_URL;
-        const domain    = parsedArgs?.domain    ?? IB_DOMAIN;
+        const domain   = parsedArgs?.domain   ?? IB_DOMAIN;
         const resource = parsedArgs?.resource ?? IB_DOMAIN;
+
+        const propertyGetActions : Array<PropertyGetAction> | undefined = parsedArgs?.propertyGetActions;
 
         return InventoryClientUtils.getHost({
             url: url,
@@ -177,7 +179,40 @@ export class Main {
             name: resource
         }).then((response : InventoryGetResponse) => {
 
-            console.log( Main._stringifyOutput(response, InventoryOutputFormat.RECORD) );
+            if ( propertyGetActions === undefined || propertyGetActions.length === 0 ) {
+
+                console.log( Main._stringifyOutput(response, InventoryOutputFormat.DEFAULT) );
+
+            } else {
+
+                const flatResponse = this._flattenJson(response);
+
+                if (isFlatJsonValue(flatResponse)) {
+                    throw new TypeError(`Only objects and arrays supported with properties.`);
+                }
+
+                forEach(propertyGetActions, (action : PropertyGetAction) => {
+
+                    const key    = action?.key;
+                    const format = action?.format ?? InventoryOutputFormat.DEFAULT;
+
+                    if (!key) throw new TypeError(`Action was not correct. Missing key.`);
+
+                    if ( flatResponse && has(flatResponse, key) ) {
+
+                        console.log( Main._stringifyOutput(flatResponse[key], format) );
+
+                    } else if (has(response, key)) {
+
+                        console.log( Main._stringifyOutput(response[key], format) );
+
+                    } else {
+                        throw new TypeError(`Key "${key}" not found from the response.`);
+                    }
+
+                });
+
+            }
 
             return 0;
 
@@ -187,8 +222,8 @@ export class Main {
 
     public static setResourceAction (parsedArgs : MainArgumentsObject) : Promise<number> {
 
-        const url   = parsedArgs?.url   ?? IB_URL;
-        const domain = parsedArgs?.domain ?? IB_DOMAIN;
+        const url      = parsedArgs?.url    ?? IB_URL;
+        const domain   = parsedArgs?.domain ?? IB_DOMAIN;
         const resource = parsedArgs?.resource;
         const propertySetActions : Array<PropertySetAction> | undefined = parsedArgs?.propertySetActions;
 
@@ -203,7 +238,7 @@ export class Main {
             data: data
         }).then((response : InventoryPatchResponse) => {
 
-            console.log( Main._stringifyOutput(response, InventoryOutputFormat.RECORD) );
+            console.log( Main._stringifyOutput(response, InventoryOutputFormat.DEFAULT) );
 
             return 0;
 
@@ -277,6 +312,10 @@ export class Main {
                 return this._jsonStringifyOutput(value);
 
             case InventoryOutputFormat.DEFAULT:
+
+                if (isString(value)) return this._stringifyOutput(value, InventoryOutputFormat.STRING);
+                if (isObject(value)) return this._stringifyOutput(value, InventoryOutputFormat.RECORD);
+
                 return this._jsonStringifyOutput(value);
 
         }

@@ -132,21 +132,47 @@ var Main = /** @class */ (function () {
             url: url,
             domain: domain
         }).then(function (response) {
-            console.log(Main._stringifyOutput(response.items, InventoryArgumentService_1.InventoryOutputFormat.RECORD));
+            console.log(Main._stringifyOutput(response.items, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT));
             return 0;
         });
     };
     Main.getResourceAction = function (parsedArgs) {
+        var _this = this;
         var _a, _b, _c;
         var url = (_a = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.url) !== null && _a !== void 0 ? _a : env_1.IB_URL;
         var domain = (_b = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.domain) !== null && _b !== void 0 ? _b : env_1.IB_DOMAIN;
         var resource = (_c = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.resource) !== null && _c !== void 0 ? _c : env_1.IB_DOMAIN;
+        var propertyGetActions = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.propertyGetActions;
         return InventoryClientUtils_1["default"].getHost({
             url: url,
             domain: domain,
             name: resource
         }).then(function (response) {
-            console.log(Main._stringifyOutput(response, InventoryArgumentService_1.InventoryOutputFormat.RECORD));
+            if (propertyGetActions === undefined || propertyGetActions.length === 0) {
+                console.log(Main._stringifyOutput(response, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT));
+            }
+            else {
+                var flatResponse_1 = _this._flattenJson(response);
+                if (Json_1.isFlatJsonValue(flatResponse_1)) {
+                    throw new TypeError("Only objects and arrays supported with properties.");
+                }
+                lodash_1.forEach(propertyGetActions, function (action) {
+                    var _a;
+                    var key = action === null || action === void 0 ? void 0 : action.key;
+                    var format = (_a = action === null || action === void 0 ? void 0 : action.format) !== null && _a !== void 0 ? _a : InventoryArgumentService_1.InventoryOutputFormat.DEFAULT;
+                    if (!key)
+                        throw new TypeError("Action was not correct. Missing key.");
+                    if (flatResponse_1 && lodash_1.has(flatResponse_1, key)) {
+                        console.log(Main._stringifyOutput(flatResponse_1[key], format));
+                    }
+                    else if (lodash_1.has(response, key)) {
+                        console.log(Main._stringifyOutput(response[key], format));
+                    }
+                    else {
+                        throw new TypeError("Key \"" + key + "\" not found from the response.");
+                    }
+                });
+            }
             return 0;
         });
     };
@@ -165,7 +191,7 @@ var Main = /** @class */ (function () {
             name: resource,
             data: data
         }).then(function (response) {
-            console.log(Main._stringifyOutput(response, InventoryArgumentService_1.InventoryOutputFormat.RECORD));
+            console.log(Main._stringifyOutput(response, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT));
             return 0;
         });
     };
@@ -218,6 +244,10 @@ var Main = /** @class */ (function () {
             case InventoryArgumentService_1.InventoryOutputFormat.INTEGER:
                 return this._jsonStringifyOutput(value);
             case InventoryArgumentService_1.InventoryOutputFormat.DEFAULT:
+                if (lodash_1.isString(value))
+                    return this._stringifyOutput(value, InventoryArgumentService_1.InventoryOutputFormat.STRING);
+                if (lodash_1.isObject(value))
+                    return this._stringifyOutput(value, InventoryArgumentService_1.InventoryOutputFormat.RECORD);
                 return this._jsonStringifyOutput(value);
         }
         throw new TypeError("The output type \"" + type + "\" is not implemented for stringifier.");
