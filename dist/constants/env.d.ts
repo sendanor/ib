@@ -12,6 +12,12 @@ export declare const IB_DOMAIN: string;
  */
 export declare const IB_URL: string;
 /**
+ * The meta character to use for meta properties like id and name, which are not part of the host variables.
+ *
+ * It defaults to `@`.
+ */
+export declare const IB_META_KEY: string;
+/**
  * The default log level
  */
 export declare const IB_LOG_LEVEL: InventoryLogLevel;

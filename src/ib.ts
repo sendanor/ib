@@ -12,6 +12,7 @@ import * as URL from 'url';
 import Main from './Main';
 import HttpClientUtils from "./services/HttpClientUtils";
 import LogService from "./services/LogService";
+import {IB_META_KEY} from "./constants/env";
 
 const LOG = LogService.createLogger('ib');
 

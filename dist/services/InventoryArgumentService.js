@@ -19,6 +19,7 @@ exports.InventoryArgumentService = exports.InventoryOptionKey = exports.Inventor
 var lodash_1 = require("../modules/lodash");
 var InventoryAction_1 = __importDefault(require("../types/InventoryAction"));
 var LogService_1 = __importDefault(require("./LogService"));
+var env_1 = require("../constants/env");
 var LOG = LogService_1["default"].createLogger('InventoryArgumentService');
 var InventoryOutputFormat;
 (function (InventoryOutputFormat) {
@@ -71,7 +72,6 @@ var InventoryArgumentService = /** @class */ (function () {
         // Parse options
         if (lodash_1.startsWith(item, '--')) {
             var valueKeyIndex = item.indexOf('=');
-            '';
             var hasValue = valueKeyIndex >= 0;
             var optKey = item.substr('--'.length, hasValue ? valueKeyIndex - '--'.length : item.length - 2);
             var value = hasValue ? item.substr(valueKeyIndex + 1) : '';
@@ -103,14 +103,29 @@ var InventoryArgumentService = /** @class */ (function () {
         var i = value.indexOf(separatorKey);
         if (i >= 0) {
             return {
-                key: value.substr(0, i),
+                key: this.parseKeyString(value.substr(0, i)),
                 value: value.substr(i + separatorKey.length)
             };
         }
         return {
-            key: value,
+            key: this.parseKeyString(value),
             value: ''
         };
+    };
+    /**
+     * Parse keyword which may have keywords with IB_META_KEY prefix and transfer those to use "$" internally.
+     *
+     * @param value
+     */
+    InventoryArgumentService.parseKeyString = function (value) {
+        var keys = lodash_1.map(value.split('.'), function (item) {
+            item = lodash_1.trim(item);
+            if (lodash_1.startsWith(item, env_1.IB_META_KEY)) {
+                return '$' + item.substr(env_1.IB_META_KEY.length);
+            }
+            return item;
+        });
+        return keys.join('.');
     };
     InventoryArgumentService.parseInventoryOutputFormat = function (value) {
         value = lodash_1.trim(value);
@@ -189,12 +204,13 @@ var InventoryArgumentService = /** @class */ (function () {
         }
     };
     InventoryArgumentService.parseGetPropertyOptions = function (args) {
+        var _this = this;
         return lodash_1.reduce(args, function (result, item) {
             var parsedKeyType = InventoryArgumentService.parseKeyValue(item, ':');
             var key = parsedKeyType.key;
             var type = parsedKeyType.value;
             result.push({
-                key: lodash_1.trim(key),
+                key: _this.parseKeyString(key),
                 format: InventoryArgumentService.parseInventoryOutputFormat(type)
             });
             return result;
@@ -323,6 +339,7 @@ var InventoryArgumentService = /** @class */ (function () {
         }
     };
     InventoryArgumentService.parseSetPropertyOptions = function (args) {
+        var _this = this;
         return lodash_1.reduce(args, function (result, item) {
             var parsedKeyValue = InventoryArgumentService.parseKeyValue(item, '=');
             var keyType = parsedKeyValue.key;
@@ -331,7 +348,7 @@ var InventoryArgumentService = /** @class */ (function () {
             var key = lodash_1.trim(parsedKeyType.key);
             var type = InventoryArgumentService.parseInventoryInputType(parsedKeyType.value);
             result.push({
-                key: key,
+                key: _this.parseKeyString(key),
                 type: type,
                 value: InventoryArgumentService.parseInventoryInputValue(key, type, value)
             });

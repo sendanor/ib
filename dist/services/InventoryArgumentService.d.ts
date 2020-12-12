@@ -52,6 +52,12 @@ export declare class InventoryArgumentService {
         key: string;
         value: string;
     };
+    /**
+     * Parse keyword which may have keywords with IB_META_KEY prefix and transfer those to use "$" internally.
+     *
+     * @param value
+     */
+    static parseKeyString(value: string): string;
     static parseInventoryOutputFormat(value: string): InventoryOutputFormat;
     static parseInventoryInputType(value: string): InventoryInputType;
     static parseGetPropertyOptions(args: Array<string>): Array<PropertyGetAction>;

@@ -14,7 +14,7 @@ import InventoryClientUtils, {
     InventoryListResponse,
     InventoryPatchResponse
 } from "./services/InventoryClientUtils";
-import {IB_DOMAIN, IB_URL} from "./constants/env";
+import {IB_DOMAIN, IB_META_KEY, IB_URL} from "./constants/env";
 import LogService from "./services/LogService";
 import InventoryData from "./types/InventoryData";
 import PlainObject, {PlainObjectOf} from "./types/PlainObject";

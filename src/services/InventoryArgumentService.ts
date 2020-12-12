@@ -3,6 +3,7 @@
 import {forEach, indexOf, isNumber, keys, map, reduce, some, startsWith, trim} from "../modules/lodash";
 import InventoryAction from "../types/InventoryAction";
 import LogService from "./LogService";
+import {IB_META_KEY} from "../constants/env";
 
 const LOG = LogService.createLogger('InventoryArgumentService');
 
@@ -96,7 +97,7 @@ export class InventoryArgumentService {
         if (startsWith(item, '--')) {
 
             const valueKeyIndex : number = item.indexOf('=');
-''
+
             const hasValue : boolean = valueKeyIndex >= 0;
 
             const optKey : string | InventoryOptionKey = item.substr('--'.length, hasValue ? valueKeyIndex - '--'.length : item.length - 2);
@@ -153,15 +154,38 @@ export class InventoryArgumentService {
 
         if (i >= 0) {
             return {
-                key: value.substr(0, i),
+                key: this.parseKeyString(value.substr(0, i)),
                 value: value.substr(i+separatorKey.length)
             };
         }
 
         return {
-            key: value,
+            key: this.parseKeyString(value),
             value:''
         };
+
+    }
+
+    /**
+     * Parse keyword which may have keywords with IB_META_KEY prefix and transfer those to use "$" internally.
+     *
+     * @param value
+     */
+    public static parseKeyString (value : string) : string {
+
+        const keys : Array<string> = map(value.split('.'), (item: string) : string => {
+
+            item = trim(item);
+
+            if (startsWith(item, IB_META_KEY)) {
+                return '$' + item.substr(IB_META_KEY.length);
+            }
+
+            return item;
+
+        });
+
+        return keys.join('.');
 
     }
 
@@ -280,7 +304,7 @@ export class InventoryArgumentService {
             const type : string = parsedKeyType.value;
 
             result.push({
-                key: trim(key),
+                key: this.parseKeyString(key),
                 format: InventoryArgumentService.parseInventoryOutputFormat(type)
             });
 
@@ -483,7 +507,7 @@ export class InventoryArgumentService {
             const type : InventoryInputType = InventoryArgumentService.parseInventoryInputType(parsedKeyType.value);
 
             result.push({
-                key: key,
+                key: this.parseKeyString(key),
                 type: type,
                 value: InventoryArgumentService.parseInventoryInputValue(key, type, value)
             });
