@@ -1,5 +1,6 @@
 export declare class Test {
-    static isString(value: any): boolean;
+    static isString(value: any): value is string;
+    static isNumber(value: any): value is number;
     /**
      * Test if it is an regular object.
      *
@@ -35,6 +36,8 @@ export declare class AssertUtils {
     static notObject(value: any): void;
     static isString(value: string | undefined): void;
     static notString(value: string | undefined): void;
+    static isNumber(value: number | undefined): void;
+    static notNumber(value: number | undefined): void;
     static isArray(value: any): void;
     static notArray(value: any): void;
     static isPromise(value: any): void;

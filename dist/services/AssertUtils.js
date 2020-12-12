@@ -9,6 +9,9 @@ var Test = /** @class */ (function () {
     Test.isString = function (value) {
         return lodash_1.isString(value);
     };
+    Test.isNumber = function (value) {
+        return lodash_1.isNumber(value);
+    };
     /**
      * Test if it is an regular object.
      *
@@ -105,6 +108,16 @@ var AssertUtils = /** @class */ (function () {
     AssertUtils.notString = function (value) {
         if (Test.isString(value)) {
             throw new TypeError('Value was string: ' + value);
+        }
+    };
+    AssertUtils.isNumber = function (value) {
+        if (!Test.isNumber(value)) {
+            throw new TypeError('Value was not number: ' + value);
+        }
+    };
+    AssertUtils.notNumber = function (value) {
+        if (Test.isNumber(value)) {
+            throw new TypeError('Value was number: ' + value);
         }
     };
     AssertUtils.isArray = function (value) {

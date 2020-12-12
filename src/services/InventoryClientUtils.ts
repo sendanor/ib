@@ -4,142 +4,144 @@ import HttpClientUtils, {HttpResponse, HttpMethod} from "./HttpClientUtils";
 import AssertUtils from "./AssertUtils";
 import LogService from "./LogService";
 import InventoryData from "../types/InventoryData";
+import {ReadonlyJsonAny, ReadonlyJsonObject} from "../types/Json";
+import InventoryItem from "../types/InventoryItem";
+import {map} from "../modules/lodash";
 
 const LOG = LogService.createLogger('InventoryClientUtils');
 
-export interface ListPayload<T> {
+// Generic types for our inventory models
 
-    totalCount : number;
-    pageCount : number;
-    hosts : Array<T>;
+export type InventoryIdType       = string;
+export type InventoryTimestamp    = string;
+export type InventoryUrlType      = string;
+export type InventoryDomainType   = string;
+export type InventoryNameType     = string;
 
-}
+// Types for generic backend objects
 
-export interface ItemPayload<T> {
+export interface BackendListPayload< T extends ReadonlyJsonAny > extends ReadonlyJsonObject {
 
-    id   : string;
-    name : string;
-    data : T;
-
-}
-
-export interface BackendResponse<T> {
-
-    timestamp : string;
-    payload   : T;
-    changed   : boolean;
-
-}
-
-export interface InventoryClientUpdateRequestObject {
-
-    readonly url      : string;
-    readonly domain    : string;
-    readonly resource : string;
-    readonly data     : InventoryData;
-
-}
-
-export interface InventoryClientUpdateResponseObject {
-
-    readonly request  : InventoryClientUpdateRequestObject;
-
-    readonly id       : string;
-    readonly name     : string;
-    readonly data     : InventoryData;
-
-}
-
-export interface InventoryClientListRequestObject {
-
-    readonly url   : string;
-    readonly domain : string;
-
-}
-
-export interface InventoryClientFetchRequestObject {
-
-    readonly url      : string;
-    readonly domain    : string;
-    readonly resource : string;
-
-}
-
-export interface InventoryClientFetchResponse {
-
-    readonly request    : InventoryClientFetchRequestObject;
-    readonly data       : InventoryData;
-
-}
-
-export interface InventoryClientListResponse {
-
-    readonly request    : InventoryClientListRequestObject;
-    readonly hosts      : Array<InventoryData>;
+    readonly hosts      : ReadonlyArray<T>;
     readonly totalCount : number;
     readonly pageCount  : number;
 
 }
 
-export interface InventoryClientGetRequestObject {
+export interface BackendItemPayload< T extends ReadonlyJsonAny|undefined > extends ReadonlyJsonObject {
 
-    readonly url        : string;
-    readonly domain      : string;
-    readonly resource   : string;
-
-}
-
-export interface InventoryClientGetResponse {
-
-    readonly request : InventoryClientGetRequestObject;
-    readonly data    : Readonly<InventoryData>;
+    readonly id    : InventoryIdType;
+    readonly name  : InventoryNameType;
+    readonly data ?: T;
 
 }
 
-export interface InventoryClientSetRequestObject {
+export interface BackendResponse<T extends ReadonlyJsonAny|undefined> extends ReadonlyJsonObject {
 
-    readonly url        : string;
-    readonly domain : string;
-    readonly resource   : string;
-
-}
-
-export interface InventoryClientSetResponse {
-
-    readonly request : InventoryClientSetRequestObject;
-    readonly payload : Readonly<Record<string, any>>;
-    readonly changed : boolean;
+    readonly timestamp : InventoryTimestamp;
+    readonly payload   : T;
+    readonly changed   : boolean;
 
 }
 
-export interface InventoryClientDeleteRequestObject {
+// Types for PATCH
 
-    readonly url        : string;
-    readonly domain : string;
-    readonly resource   : string;
+export interface InventoryPatchRequest extends ReadonlyJsonObject {
+
+    readonly url      : InventoryUrlType;
+    readonly domain   : InventoryDomainType;
+    readonly name     : InventoryNameType;
+    readonly data     : InventoryData;
 
 }
 
-export interface InventoryClientDeleteResponse {
+export interface InventoryPatchResponse extends InventoryItem {
 
-    readonly request    : InventoryClientDeleteRequestObject;
+    readonly $request  : InventoryPatchRequest;
+    readonly $response : BackendResponse<BackendItemPayload<InventoryData>>;
+    readonly $payload  : BackendItemPayload<InventoryData>;
+    readonly $data     : InventoryData;
+
+}
+
+// Types for Listing
+
+export interface InventoryListRequest extends ReadonlyJsonObject {
+
+    readonly url    : InventoryUrlType;
+    readonly domain : InventoryDomainType;
+    readonly page  ?: number;
+    readonly size  ?: number;
+
+}
+
+export interface InventoryListResponse {
+
+    readonly $request   : InventoryListRequest;
+    readonly $response  : BackendResponse<BackendListPayload<InventoryData>>;
+    readonly $payload   : BackendListPayload<InventoryData>;
+
+    readonly items      : ReadonlyArray<InventoryItem>;
+    readonly totalCount : number;
+    readonly pageCount  : number;
+
+}
+
+// Types for GET
+
+export interface InventoryGetRequest extends ReadonlyJsonObject {
+
+    readonly url     : InventoryUrlType;
+    readonly domain  : InventoryDomainType;
+    readonly name    : InventoryNameType;
+
+}
+
+export interface InventoryGetResponse extends InventoryItem {
+
+    readonly $request  : InventoryGetRequest;
+    readonly $response : BackendResponse<BackendItemPayload<InventoryData>>;
+    readonly $payload  : BackendItemPayload<InventoryData>;
+    readonly $data     : InventoryData;
+
+}
+
+// Types for DELETE
+
+export interface InventoryDeleteRequest {
+
+    readonly url      : InventoryUrlType;
+    readonly domain   : InventoryDomainType;
+    readonly resource : InventoryNameType;
+
+}
+
+export interface InventoryDeleteResponse {
+
+    readonly $request   : InventoryDeleteRequest;
+    readonly $response  : BackendResponse<BackendItemPayload< InventoryData | undefined >>;
+    readonly $payload   : BackendItemPayload< InventoryData | undefined >;
+
     readonly changed    : boolean;
 
 }
 
+/**
+ * Utility services to implement Inventory Clients
+ */
 export class InventoryClientUtils {
 
-    public static updateHost (request : InventoryClientUpdateRequestObject) : Promise<InventoryClientUpdateResponseObject> {
+    public static updateHost (request : InventoryPatchRequest) : Promise<InventoryPatchResponse> {
 
         AssertUtils.isObject(request);
         AssertUtils.isObject(request.data);
         AssertUtils.isString(request.url);
         AssertUtils.isString(request.domain);
-        AssertUtils.isString(request.resource);
+        AssertUtils.isString(request.name);
 
         const url = `${ request.url }/${ this.q(request.domain) }`;
 
-        const name = request?.resource;
+        const name = request?.name;
 
         if (!name) throw new TypeError('The resource name is required.');
 
@@ -148,25 +150,31 @@ export class InventoryClientUtils {
             data: request.data
         };
 
-        return HttpClientUtils.jsonRequest(HttpMethod.PATCH, url, data).then((response: HttpResponse<BackendResponse<ItemPayload<InventoryData>>>) : InventoryClientUpdateResponseObject => {
+        return HttpClientUtils.jsonRequest(HttpMethod.PATCH, url, data).then((httpResponse: HttpResponse<BackendResponse<BackendItemPayload<InventoryData>>>) : InventoryPatchResponse => {
 
-            LOG.debug('response = ', response);
+            const backendResponse : BackendResponse<BackendItemPayload<InventoryData>> = httpResponse.data;
+            const payload         : BackendItemPayload<InventoryData>                  = backendResponse.payload;
+            const item            : InventoryData | undefined                          = payload.data;
 
-            const data    : BackendResponse<ItemPayload<InventoryData>> = response.data;
-            const payload : ItemPayload<InventoryData>                  = data.payload;
+            LOG.debug('PATCH: item, backendResponse, httpResponse = ', item, backendResponse, httpResponse);
+
+            if (!item) throw new TypeError('Backend payload did not have inventory data');
 
             return {
-                request: request,
-                id: payload.id,
-                name: payload.name,
-                data: payload.data
+                ...item,
+                $request  : request,
+                $response : backendResponse,
+                $payload  : payload,
+                $id       : payload.id,
+                $name     : payload.name,
+                $data     : item
             };
 
         });
 
     }
 
-    public static deleteHost (request : InventoryClientDeleteRequestObject) : Promise<InventoryClientDeleteResponse> {
+    public static deleteHost (request : InventoryDeleteRequest) : Promise<InventoryDeleteResponse> {
 
         AssertUtils.isObject(request);
         AssertUtils.isString(request.url);
@@ -175,65 +183,102 @@ export class InventoryClientUtils {
 
         const url = `${ request.url }/${ this.q(request.domain) }/${ this.q(request.resource) }`;
 
-        return HttpClientUtils.jsonRequest(HttpMethod.DELETE, url).then((response: HttpResponse<any>) : InventoryClientDeleteResponse => {
+        return HttpClientUtils.jsonRequest(HttpMethod.DELETE, url).then((httpResponse: HttpResponse<any>) : InventoryDeleteResponse => {
 
-            const payload = response?.data?.payload ?? undefined;
+            const backendResponse : BackendResponse<BackendItemPayload<InventoryData>> = httpResponse.data;
+
+            const payload         : BackendItemPayload<InventoryData>                  = backendResponse?.payload ?? undefined;
+
+            LOG.debug('DELETE: payload, backendResponse, httpResponse = ', payload, backendResponse, httpResponse);
 
             return {
-                request: request,
-                changed: payload.changed
+                $request  : request,
+                $response : backendResponse,
+                $payload  : payload,
+                changed   : backendResponse.changed
             };
 
         });
 
     }
 
-    public static listHosts (request : InventoryClientListRequestObject) : Promise<InventoryClientListResponse> {
+    public static listHosts (request : InventoryListRequest) : Promise<InventoryListResponse> {
 
         AssertUtils.isObject(request);
         AssertUtils.isString(request.url);
         AssertUtils.isString(request.domain);
+        if (request.page !== undefined) AssertUtils.isNumber(request.page);
+        if (request.size !== undefined) AssertUtils.isNumber(request.size);
 
         // FIXME: Add support for changing these from the command line
-        const page = 1;
-        const size = 10;
+        const page = request.page ?? 1;
+        const size = request.size ?? 10;
 
         const url = `${ request.url }/${ this.q(request.domain) }?page=${this.q(''+page)}&size=${this.q(''+size)}`;
 
-        return HttpClientUtils.jsonRequest(HttpMethod.GET, url).then((response: HttpResponse<BackendResponse<ListPayload<InventoryData>>>) : InventoryClientListResponse => {
+        return HttpClientUtils.jsonRequest(HttpMethod.GET, url).then((httpResponse: HttpResponse<BackendResponse<BackendListPayload<BackendItemPayload<InventoryData>>>>) : InventoryListResponse => {
 
-            LOG.debug('response = ', response);
+            const backendResponse : BackendResponse<BackendListPayload<BackendItemPayload<InventoryData>>> = httpResponse.data;
+            const payload         : BackendListPayload<BackendItemPayload<InventoryData>>                  = backendResponse.payload;
 
-            const data : BackendResponse<ListPayload<InventoryData>> = response.data;
-            const payload : ListPayload<InventoryData> = data.payload;
+            LOG.debug('LIST: payload, backendResponse, httpResponse = ', payload, backendResponse, httpResponse);
+
+            // FIXME: Add assert and/or type hint check for ReadonlyArray<InventoryItem>
+
+            const items : ReadonlyArray<InventoryItem> = map(payload.hosts, (item : BackendItemPayload<InventoryData>) : InventoryItem => {
+
+                const data : InventoryData | undefined = item.data;
+
+                if (!data) throw new TypeError(`Item "${item?.id}" in the response did not have data property!`);
+
+                return {
+                    ...data,
+                    $id   : item.id,
+                    $name : item.name,
+                    $data : item.data
+                };
+
+            });
 
             return {
-                request: request,
-                hosts: payload.hosts,
-                totalCount: payload.totalCount,
-                pageCount: payload.pageCount
+                $request   : request,
+                $response  : backendResponse,
+                $payload   : payload,
+                items      : items,
+                totalCount : payload.totalCount,
+                pageCount  : payload.pageCount
             };
 
         });
 
     }
 
-    public static getHost (request : InventoryClientGetRequestObject) : Promise<InventoryClientGetResponse> {
+    public static getHost (request : InventoryGetRequest) : Promise<InventoryGetResponse> {
 
         AssertUtils.isObject(request);
         AssertUtils.isString(request.url);
         AssertUtils.isString(request.domain);
-        AssertUtils.isString(request.resource);
+        AssertUtils.isString(request.name);
 
-        const url = `${ request.url }/${ this.q(request.domain) }/${ this.q(request.resource) }`;
+        const url = `${ request.url }/${ this.q(request.domain) }/${ this.q(request.name) }`;
 
-        return HttpClientUtils.jsonRequest(HttpMethod.GET, url).then((response: HttpResponse<any>) : InventoryClientGetResponse => {
+        return HttpClientUtils.jsonRequest(HttpMethod.GET, url).then((httpResponse: HttpResponse<any>) : InventoryGetResponse => {
 
-            const payload = response?.data?.payload ?? undefined;
+            const backendResponse : BackendResponse<BackendItemPayload<InventoryData>> = httpResponse.data;
+            const payload         : BackendItemPayload<InventoryData>                  = backendResponse.payload;
+            const item            : InventoryData | undefined                          = payload.data;
+
+            if (!item) throw new TypeError('No inventory data in the response');
+
+            LOG.debug('GET: payload, backendResponse, httpResponse = ', payload, backendResponse, httpResponse);
 
             return {
-                request : request,
-                data    : payload.data
+                $request  : request,
+                $response : backendResponse,
+                $payload  : payload,
+                $id       : payload.id,
+                $name     : payload.name,
+                $data     : item
             };
 
         });

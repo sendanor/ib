@@ -9,10 +9,10 @@ import InventoryArgumentService, {
 import {forEach, some} from "./modules/lodash";
 import InventoryAction from "./types/InventoryAction";
 import InventoryClientUtils, {
-    InventoryClientDeleteResponse,
-    InventoryClientFetchResponse, InventoryClientGetResponse,
-    InventoryClientListResponse,
-    InventoryClientUpdateResponseObject
+    InventoryDeleteResponse,
+    InventoryGetResponse,
+    InventoryListResponse,
+    InventoryPatchResponse
 } from "./services/InventoryClientUtils";
 import {IB_DOMAIN, IB_URL} from "./constants/env";
 import LogService from "./services/LogService";
@@ -134,15 +134,15 @@ export class Main {
 
     public static listHostsAction (parsedArgs : MainArgumentsObject) : Promise<number> {
 
-        const url    = parsedArgs?.url        ?? IB_URL;
+        const url    = parsedArgs?.url    ?? IB_URL;
         const domain = parsedArgs?.domain ?? IB_DOMAIN;
 
         return InventoryClientUtils.listHosts({
-            url: url,
-            domain: domain
-        }).then((response : InventoryClientListResponse) => {
+            url    : url,
+            domain : domain
+        }).then((response : InventoryListResponse) => {
 
-            console.log( Main._stringifyOutput(response.hosts, InventoryOutputFormat.DEFAULT) );
+            console.log( Main._stringifyOutput(response.items, InventoryOutputFormat.RECORD) );
 
             return 0;
 
@@ -159,8 +159,8 @@ export class Main {
         return InventoryClientUtils.getHost({
             url: url,
             domain: domain,
-            resource: resource
-        }).then((response : InventoryClientGetResponse) => {
+            name: resource
+        }).then((response : InventoryGetResponse) => {
 
             console.log( Main._stringifyOutput(response.data, InventoryOutputFormat.DEFAULT) );
 
@@ -184,9 +184,9 @@ export class Main {
         return InventoryClientUtils.updateHost({
             url: url,
             domain: domain,
-            resource: resource,
+            name: resource,
             data: data
-        }).then((response : InventoryClientUpdateResponseObject) => {
+        }).then((response : InventoryPatchResponse) => {
 
             console.log( Main._stringifyOutput(response.data, InventoryOutputFormat.DEFAULT) );
 
@@ -206,7 +206,7 @@ export class Main {
             url: url,
             domain: domain,
             resource: resource
-        }).then((response : InventoryClientDeleteResponse) => {
+        }).then((response : InventoryDeleteResponse) => {
 
             console.log( Main._stringifyOutput(response.changed, InventoryOutputFormat.DEFAULT) );
 
@@ -221,7 +221,7 @@ export class Main {
         try {
             return JSON.stringify(value);
         } catch (err) {
-            throw new TypeError(`Cannot JSON stringify value "${value}: ${err}`);
+            throw new TypeError(`Cannot stringify value "${value}" as JSON: ${err}`);
         }
     }
 
@@ -241,28 +241,28 @@ export class Main {
                 return `${value}`;
 
             case InventoryOutputFormat.RECORD:
-                return `${ this._jsonStringifyOutput(value) }`;
+                return this._stringifyRecord(value);
 
             case InventoryOutputFormat.JSON:
-                return `${ this._jsonStringifyOutput(value) }`;
+                return this._jsonStringifyOutput(value);
 
             case InventoryOutputFormat.OBJECT:
-                return `${ this._jsonStringifyOutput(value) }`;
+                return this._jsonStringifyOutput(value);
 
             case InventoryOutputFormat.ARRAY:
-                return `${ this._jsonStringifyOutput(value) }`;
+                return this._jsonStringifyOutput(value);
 
             case InventoryOutputFormat.BOOLEAN:
-                return `${ this._jsonStringifyOutput(value) }`;
+                return this._jsonStringifyOutput(value);
 
             case InventoryOutputFormat.NUMBER:
-                return `${ this._jsonStringifyOutput(value) }`;
+                return this._jsonStringifyOutput(value);
 
             case InventoryOutputFormat.INTEGER:
-                return `${ this._jsonStringifyOutput(value) }`;
+                return this._jsonStringifyOutput(value);
 
             case InventoryOutputFormat.DEFAULT:
-                return `${ this._jsonStringifyOutput(value) }`;
+                return this._jsonStringifyOutput(value);
 
         }
 
@@ -270,11 +270,24 @@ export class Main {
 
     }
 
+    private static _stringifyRecord (value : any) {
+        try {
+
+            return JSON.stringify(value);
+
+        } catch (err) {
+            throw new TypeError(`Cannot stringify value "${value}" as record: ${err}`);
+        }
+    }
+
     private static _createObjectFromSetActions (actions : Array<PropertySetAction>, object : InventoryData) : InventoryData {
 
         forEach(actions, (item: PropertySetAction) => {
             if (item.key) {
-                object[item.key] = item.value ? Main._createValueFromType(item.value, item.type ?? InventoryInputType.STRING) : undefined;
+                object = {
+                    ...object,
+                    [item.key]: item.value ? Main._createValueFromType(item.value, item.type ?? InventoryInputType.STRING) : undefined
+                };
             }
         });
 

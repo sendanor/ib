@@ -1,5 +1,16 @@
 "use strict";
 // Copyright (c) 2020 Sendanor. All rights reserved.
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
@@ -120,7 +131,7 @@ var Main = /** @class */ (function () {
             url: url,
             domain: domain
         }).then(function (response) {
-            console.log(Main._stringifyOutput(response.hosts, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT));
+            console.log(Main._stringifyOutput(response.items, InventoryArgumentService_1.InventoryOutputFormat.RECORD));
             return 0;
         });
     };
@@ -132,7 +143,7 @@ var Main = /** @class */ (function () {
         return InventoryClientUtils_1["default"].getHost({
             url: url,
             domain: domain,
-            resource: resource
+            name: resource
         }).then(function (response) {
             console.log(Main._stringifyOutput(response.data, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT));
             return 0;
@@ -150,7 +161,7 @@ var Main = /** @class */ (function () {
         return InventoryClientUtils_1["default"].updateHost({
             url: url,
             domain: domain,
-            resource: resource,
+            name: resource,
             data: data
         }).then(function (response) {
             console.log(Main._stringifyOutput(response.data, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT));
@@ -176,7 +187,7 @@ var Main = /** @class */ (function () {
             return JSON.stringify(value);
         }
         catch (err) {
-            throw new TypeError("Cannot JSON stringify value \"" + value + ": " + err);
+            throw new TypeError("Cannot stringify value \"" + value + "\" as JSON: " + err);
         }
     };
     Main._jsonParseInput = function (value) {
@@ -192,29 +203,38 @@ var Main = /** @class */ (function () {
             case InventoryArgumentService_1.InventoryOutputFormat.STRING:
                 return "" + value;
             case InventoryArgumentService_1.InventoryOutputFormat.RECORD:
-                return "" + this._jsonStringifyOutput(value);
+                return this._stringifyRecord(value);
             case InventoryArgumentService_1.InventoryOutputFormat.JSON:
-                return "" + this._jsonStringifyOutput(value);
+                return this._jsonStringifyOutput(value);
             case InventoryArgumentService_1.InventoryOutputFormat.OBJECT:
-                return "" + this._jsonStringifyOutput(value);
+                return this._jsonStringifyOutput(value);
             case InventoryArgumentService_1.InventoryOutputFormat.ARRAY:
-                return "" + this._jsonStringifyOutput(value);
+                return this._jsonStringifyOutput(value);
             case InventoryArgumentService_1.InventoryOutputFormat.BOOLEAN:
-                return "" + this._jsonStringifyOutput(value);
+                return this._jsonStringifyOutput(value);
             case InventoryArgumentService_1.InventoryOutputFormat.NUMBER:
-                return "" + this._jsonStringifyOutput(value);
+                return this._jsonStringifyOutput(value);
             case InventoryArgumentService_1.InventoryOutputFormat.INTEGER:
-                return "" + this._jsonStringifyOutput(value);
+                return this._jsonStringifyOutput(value);
             case InventoryArgumentService_1.InventoryOutputFormat.DEFAULT:
-                return "" + this._jsonStringifyOutput(value);
+                return this._jsonStringifyOutput(value);
         }
         throw new TypeError("The output type \"" + type + "\" is not implemented for stringifier.");
+    };
+    Main._stringifyRecord = function (value) {
+        try {
+            return JSON.stringify(value);
+        }
+        catch (err) {
+            throw new TypeError("Cannot stringify value \"" + value + "\" as record: " + err);
+        }
     };
     Main._createObjectFromSetActions = function (actions, object) {
         lodash_1.forEach(actions, function (item) {
             var _a;
+            var _b;
             if (item.key) {
-                object[item.key] = item.value ? Main._createValueFromType(item.value, (_a = item.type) !== null && _a !== void 0 ? _a : InventoryArgumentService_1.InventoryInputType.STRING) : undefined;
+                object = __assign(__assign({}, object), (_a = {}, _a[item.key] = item.value ? Main._createValueFromType(item.value, (_b = item.type) !== null && _b !== void 0 ? _b : InventoryArgumentService_1.InventoryInputType.STRING) : undefined, _a));
             }
         });
         return object;

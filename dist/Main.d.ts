@@ -12,6 +12,7 @@ export declare class Main {
     private static _jsonStringifyOutput;
     private static _jsonParseInput;
     private static _stringifyOutput;
+    private static _stringifyRecord;
     private static _createObjectFromSetActions;
     private static _createValueFromType;
 }

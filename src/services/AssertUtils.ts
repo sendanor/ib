@@ -2,14 +2,19 @@
 
 import {
     isString,
+    isNumber,
     isObject,
     isArray
 } from "../modules/lodash";
 
 export class Test {
 
-    static isString (value: any) : boolean {
+    static isString (value: any) : value is string {
         return isString(value);
+    }
+
+    static isNumber (value: any) : value is number {
+        return isNumber(value);
     }
 
     /**
@@ -146,6 +151,22 @@ export class AssertUtils {
 
         if (Test.isString(value)) {
             throw new TypeError('Value was string: ' + value);
+        }
+
+    }
+
+    public static isNumber (value : number | undefined) {
+
+        if (!Test.isNumber(value)) {
+            throw new TypeError('Value was not number: ' + value);
+        }
+
+    }
+
+    public static notNumber (value : number | undefined) {
+
+        if (Test.isNumber(value)) {
+            throw new TypeError('Value was number: ' + value);
         }
 
     }

@@ -1,5 +1,16 @@
 "use strict";
 // Copyright (c) 2020 Sendanor. All rights reserved.
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
@@ -27,7 +38,11 @@ exports.InventoryClientUtils = void 0;
 var HttpClientUtils_1 = __importStar(require("./HttpClientUtils"));
 var AssertUtils_1 = __importDefault(require("./AssertUtils"));
 var LogService_1 = __importDefault(require("./LogService"));
+var lodash_1 = require("../modules/lodash");
 var LOG = LogService_1["default"].createLogger('InventoryClientUtils');
+/**
+ * Utility services to implement Inventory Clients
+ */
 var InventoryClientUtils = /** @class */ (function () {
     function InventoryClientUtils() {
     }
@@ -36,25 +51,23 @@ var InventoryClientUtils = /** @class */ (function () {
         AssertUtils_1["default"].isObject(request.data);
         AssertUtils_1["default"].isString(request.url);
         AssertUtils_1["default"].isString(request.domain);
-        AssertUtils_1["default"].isString(request.resource);
+        AssertUtils_1["default"].isString(request.name);
         var url = request.url + "/" + this.q(request.domain);
-        var name = request === null || request === void 0 ? void 0 : request.resource;
+        var name = request === null || request === void 0 ? void 0 : request.name;
         if (!name)
             throw new TypeError('The resource name is required.');
         var data = {
             name: name,
             data: request.data
         };
-        return HttpClientUtils_1["default"].jsonRequest(HttpClientUtils_1.HttpMethod.PATCH, url, data).then(function (response) {
-            LOG.debug('response = ', response);
-            var data = response.data;
-            var payload = data.payload;
-            return {
-                request: request,
-                id: payload.id,
-                name: payload.name,
-                data: payload.data
-            };
+        return HttpClientUtils_1["default"].jsonRequest(HttpClientUtils_1.HttpMethod.PATCH, url, data).then(function (httpResponse) {
+            var backendResponse = httpResponse.data;
+            var payload = backendResponse.payload;
+            var item = payload.data;
+            LOG.debug('PATCH: item, backendResponse, httpResponse = ', item, backendResponse, httpResponse);
+            if (!item)
+                throw new TypeError('Backend payload did not have inventory data');
+            return __assign(__assign({}, item), { $request: request, $response: backendResponse, $payload: payload, $id: payload.id, $name: payload.name, $data: item });
         });
     };
     InventoryClientUtils.deleteHost = function (request) {
@@ -63,30 +76,48 @@ var InventoryClientUtils = /** @class */ (function () {
         AssertUtils_1["default"].isString(request.domain);
         AssertUtils_1["default"].isString(request.resource);
         var url = request.url + "/" + this.q(request.domain) + "/" + this.q(request.resource);
-        return HttpClientUtils_1["default"].jsonRequest(HttpClientUtils_1.HttpMethod.DELETE, url).then(function (response) {
-            var _a, _b;
-            var payload = (_b = (_a = response === null || response === void 0 ? void 0 : response.data) === null || _a === void 0 ? void 0 : _a.payload) !== null && _b !== void 0 ? _b : undefined;
+        return HttpClientUtils_1["default"].jsonRequest(HttpClientUtils_1.HttpMethod.DELETE, url).then(function (httpResponse) {
+            var _a;
+            var backendResponse = httpResponse.data;
+            var payload = (_a = backendResponse === null || backendResponse === void 0 ? void 0 : backendResponse.payload) !== null && _a !== void 0 ? _a : undefined;
+            LOG.debug('DELETE: payload, backendResponse, httpResponse = ', payload, backendResponse, httpResponse);
             return {
-                request: request,
-                changed: payload.changed
+                $request: request,
+                $response: backendResponse,
+                $payload: payload,
+                changed: backendResponse.changed
             };
         });
     };
     InventoryClientUtils.listHosts = function (request) {
+        var _a, _b;
         AssertUtils_1["default"].isObject(request);
         AssertUtils_1["default"].isString(request.url);
         AssertUtils_1["default"].isString(request.domain);
+        if (request.page !== undefined)
+            AssertUtils_1["default"].isNumber(request.page);
+        if (request.size !== undefined)
+            AssertUtils_1["default"].isNumber(request.size);
         // FIXME: Add support for changing these from the command line
-        var page = 1;
-        var size = 10;
+        var page = (_a = request.page) !== null && _a !== void 0 ? _a : 1;
+        var size = (_b = request.size) !== null && _b !== void 0 ? _b : 10;
         var url = request.url + "/" + this.q(request.domain) + "?page=" + this.q('' + page) + "&size=" + this.q('' + size);
-        return HttpClientUtils_1["default"].jsonRequest(HttpClientUtils_1.HttpMethod.GET, url).then(function (response) {
-            LOG.debug('response = ', response);
-            var data = response.data;
-            var payload = data.payload;
+        return HttpClientUtils_1["default"].jsonRequest(HttpClientUtils_1.HttpMethod.GET, url).then(function (httpResponse) {
+            var backendResponse = httpResponse.data;
+            var payload = backendResponse.payload;
+            LOG.debug('LIST: payload, backendResponse, httpResponse = ', payload, backendResponse, httpResponse);
+            // FIXME: Add assert and/or type hint check for ReadonlyArray<InventoryItem>
+            var items = lodash_1.map(payload.hosts, function (item) {
+                var data = item.data;
+                if (!data)
+                    throw new TypeError("Item \"" + (item === null || item === void 0 ? void 0 : item.id) + "\" in the response did not have data property!");
+                return __assign(__assign({}, data), { $id: item.id, $name: item.name, $data: item.data });
+            });
             return {
-                request: request,
-                hosts: payload.hosts,
+                $request: request,
+                $response: backendResponse,
+                $payload: payload,
+                items: items,
                 totalCount: payload.totalCount,
                 pageCount: payload.pageCount
             };
@@ -96,14 +127,22 @@ var InventoryClientUtils = /** @class */ (function () {
         AssertUtils_1["default"].isObject(request);
         AssertUtils_1["default"].isString(request.url);
         AssertUtils_1["default"].isString(request.domain);
-        AssertUtils_1["default"].isString(request.resource);
-        var url = request.url + "/" + this.q(request.domain) + "/" + this.q(request.resource);
-        return HttpClientUtils_1["default"].jsonRequest(HttpClientUtils_1.HttpMethod.GET, url).then(function (response) {
-            var _a, _b;
-            var payload = (_b = (_a = response === null || response === void 0 ? void 0 : response.data) === null || _a === void 0 ? void 0 : _a.payload) !== null && _b !== void 0 ? _b : undefined;
+        AssertUtils_1["default"].isString(request.name);
+        var url = request.url + "/" + this.q(request.domain) + "/" + this.q(request.name);
+        return HttpClientUtils_1["default"].jsonRequest(HttpClientUtils_1.HttpMethod.GET, url).then(function (httpResponse) {
+            var backendResponse = httpResponse.data;
+            var payload = backendResponse.payload;
+            var item = payload.data;
+            if (!item)
+                throw new TypeError('No inventory data in the response');
+            LOG.debug('GET: payload, backendResponse, httpResponse = ', payload, backendResponse, httpResponse);
             return {
-                request: request,
-                data: payload.data
+                $request: request,
+                $response: backendResponse,
+                $payload: payload,
+                $id: payload.id,
+                $name: payload.name,
+                $data: item
             };
         });
     };
