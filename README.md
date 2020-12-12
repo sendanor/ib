@@ -16,6 +16,14 @@ The first stable release is expected to arrive 2020/12.
 
 Commercial support up to 10 years is available from [Sendanor](https://sendanor.com).
 
+### Install
+
+`npm i -g nor-ib`
+
+...or directly from our Github:
+
+`npm i -g sendanor/ib`
+
 ### Design
 
  * [Design document (in finnish)](https://docs.google.com/document/d/1-DSF5jr2fu3Cj0wVkpxPMVpevg8zl7VSU86Xf5UU1co/edit?usp=sharing)

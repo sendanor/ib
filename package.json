@@ -1,7 +1,7 @@
 {
-  "name": "ib",
+  "name": "nor-ib",
   "version": "0.1.0",
-  "description": "Shell client for [Sendanor's Inventory Backend (for Ansible)](https://github.com/sendanor/inventory-backend).",
+  "description": "Inventory Client for Shell",
   "main": "./dist/index.ts",
   "bin": {
     "ib": "./dist/ib.js"
