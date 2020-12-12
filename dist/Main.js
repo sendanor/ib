@@ -165,7 +165,7 @@ var Main = /** @class */ (function () {
             name: resource,
             data: data
         }).then(function (response) {
-            console.log(Main._stringifyOutput(response.data, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT));
+            console.log(Main._stringifyOutput(response, InventoryArgumentService_1.InventoryOutputFormat.RECORD));
             return 0;
         });
     };

@@ -203,7 +203,7 @@ export class Main {
             data: data
         }).then((response : InventoryPatchResponse) => {
 
-            console.log( Main._stringifyOutput(response.data, InventoryOutputFormat.DEFAULT) );
+            console.log( Main._stringifyOutput(response, InventoryOutputFormat.RECORD) );
 
             return 0;
 
