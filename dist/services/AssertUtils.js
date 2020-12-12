@@ -1,40 +1,11 @@
 "use strict";
 // Copyright (c) 2020 Sendanor. All rights reserved.
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 exports.__esModule = true;
-exports.AssertUtils = exports.Test = void 0;
-var lodash_1 = require("../modules/lodash");
-var Test = /** @class */ (function () {
-    function Test() {
-    }
-    Test.isString = function (value) {
-        return lodash_1.isString(value);
-    };
-    Test.isNumber = function (value) {
-        return lodash_1.isNumber(value);
-    };
-    /**
-     * Test if it is an regular object.
-     *
-     * @param value
-     */
-    Test.isObject = function (value) {
-        return lodash_1.isObject(value) && !lodash_1.isArray(value);
-    };
-    /**
-     * Test if the value is an array
-     *
-     * @param value
-     */
-    Test.isArray = function (value) {
-        return lodash_1.isArray(value);
-    };
-    Test.isPromise = function (value) {
-        // @ts-ignore
-        return lodash_1.isObject(value) && !!value.then && !!value["catch"];
-    };
-    return Test;
-}());
-exports.Test = Test;
+exports.AssertUtils = void 0;
+var Test_1 = __importDefault(require("./Test"));
 var AssertUtils = /** @class */ (function () {
     function AssertUtils() {
     }
@@ -90,53 +61,53 @@ var AssertUtils = /** @class */ (function () {
             throw new TypeError('Value was false: ' + value);
         }
     };
-    AssertUtils.isObject = function (value) {
-        if (!Test.isObject(value)) {
-            throw new TypeError('Value was not object: ' + value);
+    AssertUtils.isRegularObject = function (value) {
+        if (!Test_1["default"].isRegularObject(value)) {
+            throw new TypeError('Value was not regular object: ' + value);
         }
     };
-    AssertUtils.notObject = function (value) {
-        if (Test.isObject(value)) {
-            throw new TypeError('Value was object: ' + value);
+    AssertUtils.notRegularObject = function (value) {
+        if (Test_1["default"].isRegularObject(value)) {
+            throw new TypeError('Value was regular object: ' + value);
         }
     };
     AssertUtils.isString = function (value) {
-        if (!Test.isString(value)) {
+        if (!Test_1["default"].isString(value)) {
             throw new TypeError('Value was not string: ' + value);
         }
     };
     AssertUtils.notString = function (value) {
-        if (Test.isString(value)) {
+        if (Test_1["default"].isString(value)) {
             throw new TypeError('Value was string: ' + value);
         }
     };
     AssertUtils.isNumber = function (value) {
-        if (!Test.isNumber(value)) {
+        if (!Test_1["default"].isNumber(value)) {
             throw new TypeError('Value was not number: ' + value);
         }
     };
     AssertUtils.notNumber = function (value) {
-        if (Test.isNumber(value)) {
+        if (Test_1["default"].isNumber(value)) {
             throw new TypeError('Value was number: ' + value);
         }
     };
     AssertUtils.isArray = function (value) {
-        if (!Test.isArray(value)) {
+        if (!Test_1["default"].isArray(value)) {
             throw new TypeError('Value was not array: ' + value);
         }
     };
     AssertUtils.notArray = function (value) {
-        if (Test.isArray(value)) {
+        if (Test_1["default"].isArray(value)) {
             throw new TypeError('Value was array: ' + value);
         }
     };
     AssertUtils.isPromise = function (value) {
-        if (!Test.isPromise(value)) {
+        if (!Test_1["default"].isPromise(value)) {
             throw new TypeError('Value was not promise: ' + value);
         }
     };
     AssertUtils.notPromise = function (value) {
-        if (Test.isPromise(value)) {
+        if (Test_1["default"].isPromise(value)) {
             throw new TypeError('Value was promise: ' + value);
         }
     };

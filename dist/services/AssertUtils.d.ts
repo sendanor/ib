@@ -1,20 +1,3 @@
-export declare class Test {
-    static isString(value: any): value is string;
-    static isNumber(value: any): value is number;
-    /**
-     * Test if it is an regular object.
-     *
-     * @param value
-     */
-    static isObject(value: any): boolean;
-    /**
-     * Test if the value is an array
-     *
-     * @param value
-     */
-    static isArray(value: any): value is Array<any>;
-    static isPromise(value: any): value is Promise<any>;
-}
 export declare class AssertUtils {
     /**
      * Use AssertUtils.isEqual()
@@ -32,8 +15,8 @@ export declare class AssertUtils {
     static notTrue(value: boolean | undefined): void;
     static isFalse(value: boolean | undefined): void;
     static notFalse(value: boolean | undefined): void;
-    static isObject(value: any): void;
-    static notObject(value: any): void;
+    static isRegularObject(value: any): void;
+    static notRegularObject(value: any): void;
     static isString(value: string | undefined): void;
     static notString(value: string | undefined): void;
     static isNumber(value: number | undefined): void;

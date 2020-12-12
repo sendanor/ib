@@ -47,8 +47,8 @@ var InventoryClientUtils = /** @class */ (function () {
     function InventoryClientUtils() {
     }
     InventoryClientUtils.updateHost = function (request) {
-        AssertUtils_1["default"].isObject(request);
-        AssertUtils_1["default"].isObject(request.data);
+        AssertUtils_1["default"].isRegularObject(request);
+        AssertUtils_1["default"].isRegularObject(request.data);
         AssertUtils_1["default"].isString(request.url);
         AssertUtils_1["default"].isString(request.domain);
         AssertUtils_1["default"].isString(request.name);
@@ -71,7 +71,7 @@ var InventoryClientUtils = /** @class */ (function () {
         });
     };
     InventoryClientUtils.deleteHost = function (request) {
-        AssertUtils_1["default"].isObject(request);
+        AssertUtils_1["default"].isRegularObject(request);
         AssertUtils_1["default"].isString(request.url);
         AssertUtils_1["default"].isString(request.domain);
         AssertUtils_1["default"].isString(request.resource);
@@ -91,7 +91,7 @@ var InventoryClientUtils = /** @class */ (function () {
     };
     InventoryClientUtils.listHosts = function (request) {
         var _a, _b;
-        AssertUtils_1["default"].isObject(request);
+        AssertUtils_1["default"].isRegularObject(request);
         AssertUtils_1["default"].isString(request.url);
         AssertUtils_1["default"].isString(request.domain);
         if (request.page !== undefined)
@@ -124,7 +124,7 @@ var InventoryClientUtils = /** @class */ (function () {
         });
     };
     InventoryClientUtils.getHost = function (request) {
-        AssertUtils_1["default"].isObject(request);
+        AssertUtils_1["default"].isRegularObject(request);
         AssertUtils_1["default"].isString(request.url);
         AssertUtils_1["default"].isString(request.domain);
         AssertUtils_1["default"].isString(request.name);
@@ -135,15 +135,8 @@ var InventoryClientUtils = /** @class */ (function () {
             var item = payload.data;
             if (!item)
                 throw new TypeError('No inventory data in the response');
-            LOG.debug('GET: payload, backendResponse, httpResponse = ', payload, backendResponse, httpResponse);
-            return {
-                $request: request,
-                $response: backendResponse,
-                $payload: payload,
-                $id: payload.id,
-                $name: payload.name,
-                $data: item
-            };
+            LOG.debug('GET: payload= ', payload, ' | backendResponse=', backendResponse, ' | httpResponse=', httpResponse);
+            return __assign(__assign({}, item), { $request: request, $response: backendResponse, $payload: payload, $id: payload.id, $name: payload.name, $data: item });
         });
     };
     InventoryClientUtils.q = function (value) {

@@ -42,6 +42,7 @@ var InventoryAction_1 = __importDefault(require("./types/InventoryAction"));
 var InventoryClientUtils_1 = __importDefault(require("./services/InventoryClientUtils"));
 var env_1 = require("./constants/env");
 var LogService_1 = __importDefault(require("./services/LogService"));
+var Json_1 = require("./types/Json");
 var LOG = LogService_1["default"].createLogger('Main');
 var Main = /** @class */ (function () {
     function Main() {
@@ -145,7 +146,7 @@ var Main = /** @class */ (function () {
             domain: domain,
             name: resource
         }).then(function (response) {
-            console.log(Main._stringifyOutput(response.data, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT));
+            console.log(Main._stringifyOutput(response, InventoryArgumentService_1.InventoryOutputFormat.RECORD));
             return 0;
         });
     };
@@ -221,13 +222,66 @@ var Main = /** @class */ (function () {
         }
         throw new TypeError("The output type \"" + type + "\" is not implemented for stringifier.");
     };
+    /**
+     *
+     * @param obj
+     * @param key
+     * @param value
+     * @private
+     */
+    Main._flattenJsonAny = function (obj, key, value) {
+        var _a;
+        // JSON doesn't have undefined values (except you could think of properties which are not defined as same thing)
+        if (value === undefined)
+            return obj;
+        if (Json_1.isReadonlyJsonArray(value)) {
+            return this._flattenJsonArray(obj, key, value);
+        }
+        if (Json_1.isReadonlyJsonSerializable(value)) {
+            return this._flattenJsonAny(obj, key, value.toJSON());
+        }
+        if (Json_1.isReadonlyJsonObject(value)) {
+            return this._flattenJsonObject(obj, key, value);
+        }
+        return __assign(__assign({}, obj), (_a = {}, _a[key] = value, _a));
+    };
+    Main._flattenJsonArray = function (obj, key, value) {
+        var _this = this;
+        return lodash_1.reduce(value, function (obj, item, index) { return _this._flattenJsonAny(obj, key + '#' + index, item); }, obj);
+    };
+    Main._flattenJsonObject = function (obj, key, value) {
+        var _this = this;
+        return lodash_1.reduce(lodash_1.keys(value), function (obj, propertyKey) { return _this._flattenJsonAny(obj, key ? key + '.' + propertyKey : propertyKey, value[propertyKey]); }, obj);
+    };
+    Main._flattenJson = function (value) {
+        if (Json_1.isFlatJsonValue(value))
+            return value;
+        return this._flattenJsonAny({}, "", value);
+    };
     Main._stringifyRecord = function (value) {
-        try {
-            return JSON.stringify(value);
+        if (lodash_1.isArray(value)) {
+            return lodash_1.map(value, function (item) {
+                var _a;
+                var id = item === null || item === void 0 ? void 0 : item.$id;
+                var name = (_a = item === null || item === void 0 ? void 0 : item.$name) !== null && _a !== void 0 ? _a : id;
+                return name + "\t" + Main._stringifyRecord(item).replace(/\n/g, '\t');
+            }).join('\n');
         }
-        catch (err) {
-            throw new TypeError("Cannot stringify value \"" + value + "\" as record: " + err);
+        if (lodash_1.isObject(value)) {
+            var flatValue_1 = this._flattenJson(value);
+            if (!Json_1.isReadonlyJsonObject(flatValue_1)) { // FIXME: Change to flat test
+                throw new TypeError('flatValue was not ReadonlyJsonObject');
+            }
+            return lodash_1.map(lodash_1.keys(flatValue_1), function (key) {
+                var keyValue = flatValue_1[key];
+                var keyValueString = Main._stringifyRecord(keyValue);
+                return key + "=" + keyValueString;
+            }).join('\n');
         }
+        if (lodash_1.isString(value)) {
+            return value;
+        }
+        return Main._jsonStringifyOutput(value);
     };
     Main._createObjectFromSetActions = function (actions, object) {
         lodash_1.forEach(actions, function (item) {

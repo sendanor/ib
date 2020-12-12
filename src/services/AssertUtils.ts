@@ -1,46 +1,6 @@
 // Copyright (c) 2020 Sendanor. All rights reserved.
 
-import {
-    isString,
-    isNumber,
-    isObject,
-    isArray
-} from "../modules/lodash";
-
-export class Test {
-
-    static isString (value: any) : value is string {
-        return isString(value);
-    }
-
-    static isNumber (value: any) : value is number {
-        return isNumber(value);
-    }
-
-    /**
-     * Test if it is an regular object.
-     *
-     * @param value
-     */
-    static isObject (value: any) : boolean {
-        return isObject(value) && !isArray(value);
-    }
-
-    /**
-     * Test if the value is an array
-     *
-     * @param value
-     */
-    static isArray (value: any) : value is Array<any> {
-        return isArray(value);
-    }
-
-    static isPromise (value: any) : value is Promise<any> {
-        // @ts-ignore
-        return isObject(value) && !!value.then && !!value.catch;
-    }
-
-}
+import Test from "./Test";
 
 export class AssertUtils {
 
@@ -123,18 +83,18 @@ export class AssertUtils {
 
     }
 
-    public static isObject (value : any) {
+    public static isRegularObject (value : any) {
 
-        if (!Test.isObject(value)) {
-            throw new TypeError('Value was not object: ' + value);
+        if (!Test.isRegularObject(value)) {
+            throw new TypeError('Value was not regular object: ' + value);
         }
 
     }
 
-    public static notObject (value : any) {
+    public static notRegularObject (value : any) {
 
-        if (Test.isObject(value)) {
-            throw new TypeError('Value was object: ' + value);
+        if (Test.isRegularObject(value)) {
+            throw new TypeError('Value was regular object: ' + value);
         }
 
     }

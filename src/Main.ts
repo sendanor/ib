@@ -6,7 +6,7 @@ import InventoryArgumentService, {
     InventoryOutputFormat,
     MainArgumentsObject, PropertySetAction
 } from "./services/InventoryArgumentService";
-import {forEach, some} from "./modules/lodash";
+import {forEach, isArray, isObject, isString, keys, map, reduce, some} from "./modules/lodash";
 import InventoryAction from "./types/InventoryAction";
 import InventoryClientUtils, {
     InventoryDeleteResponse,
@@ -17,6 +17,21 @@ import InventoryClientUtils, {
 import {IB_DOMAIN, IB_URL} from "./constants/env";
 import LogService from "./services/LogService";
 import InventoryData from "./types/InventoryData";
+import PlainObject, {PlainObjectOf} from "./types/PlainObject";
+import JsonAny, {
+    FlatJsonValue,
+    isFlatJsonValue,
+    isJsonSerializable,
+    isReadonlyJsonAny,
+    isReadonlyJsonArray,
+    isReadonlyJsonObject,
+    isReadonlyJsonSerializable,
+    ReadonlyFlatJsonObject,
+    ReadonlyJsonAny, ReadonlyJsonArray,
+    ReadonlyJsonArrayOf,
+    ReadonlyJsonObject,
+    ReadonlyJsonObjectOf
+} from "./types/Json";
 
 const LOG = LogService.createLogger('Main');
 
@@ -162,7 +177,7 @@ export class Main {
             name: resource
         }).then((response : InventoryGetResponse) => {
 
-            console.log( Main._stringifyOutput(response.data, InventoryOutputFormat.DEFAULT) );
+            console.log( Main._stringifyOutput(response, InventoryOutputFormat.RECORD) );
 
             return 0;
 
@@ -270,14 +285,119 @@ export class Main {
 
     }
 
-    private static _stringifyRecord (value : any) {
-        try {
+    /**
+     *
+     * @param obj
+     * @param key
+     * @param value
+     * @private
+     */
+    private static _flattenJsonAny (
+        obj   : ReadonlyFlatJsonObject,
+        key   : keyof ReadonlyFlatJsonObject,
+        value : ReadonlyJsonAny | undefined
+    ) : ReadonlyFlatJsonObject {
 
-            return JSON.stringify(value);
+        // JSON doesn't have undefined values (except you could think of properties which are not defined as same thing)
+        if (value === undefined) return obj;
 
-        } catch (err) {
-            throw new TypeError(`Cannot stringify value "${value}" as record: ${err}`);
+        if (isReadonlyJsonArray(value)) {
+            return this._flattenJsonArray(obj, key, value);
         }
+
+        if (isReadonlyJsonSerializable(value)) {
+            return this._flattenJsonAny(obj, key, value.toJSON());
+        }
+
+        if (isReadonlyJsonObject(value)) {
+            return this._flattenJsonObject(obj, key, value);
+        }
+
+        return {
+            ...obj,
+            [key]: value
+        };
+
+    }
+
+    private static _flattenJsonArray (
+        obj   : ReadonlyFlatJsonObject,
+        key   : keyof ReadonlyFlatJsonObject,
+        value : ReadonlyJsonArray
+    ) : ReadonlyFlatJsonObject {
+
+        return reduce(
+            value,
+            (
+                obj   : ReadonlyFlatJsonObject,
+                item  : ReadonlyJsonAny,
+                index : number
+            ) : ReadonlyFlatJsonObject => this._flattenJsonAny(obj, key + '#' + index, item),
+            obj
+        );
+
+    }
+
+    private static _flattenJsonObject (
+        obj   : ReadonlyFlatJsonObject,
+        key   : keyof ReadonlyFlatJsonObject,
+        value : ReadonlyJsonObject
+    ) : ReadonlyFlatJsonObject {
+
+        return reduce(
+            keys(value),
+            (
+                obj         : ReadonlyFlatJsonObject,
+                propertyKey : keyof ReadonlyJsonObject
+            ) : ReadonlyFlatJsonObject => this._flattenJsonAny(obj, key ? key + '.' + propertyKey : propertyKey, value[propertyKey]),
+            obj
+        );
+
+    }
+
+    private static _flattenJson (value : any) : ReadonlyFlatJsonObject | FlatJsonValue {
+
+        if (isFlatJsonValue(value)) return value;
+
+        return this._flattenJsonAny({}, "", value);
+
+    }
+
+    private static _stringifyRecord (value : any) : string {
+
+        if (isArray(value)) {
+            return map(value, (item : any) => {
+
+                const id   = item?.$id;
+                const name = item?.$name ?? id;
+
+                return `${name}\t${ Main._stringifyRecord(item).replace(/\n/g, '\t') }`;
+
+            }).join('\n');
+        }
+
+        if (isObject(value)) {
+
+            const flatValue = this._flattenJson(value);
+
+            if (!isReadonlyJsonObject(flatValue)) { // FIXME: Change to flat test
+                throw new TypeError('flatValue was not ReadonlyJsonObject');
+            }
+
+            return map(keys(flatValue), (key : string) : string => {
+                const keyValue       : any    = flatValue[key];
+                const keyValueString : string = Main._stringifyRecord(keyValue);
+                return `${key}=${keyValueString}`;
+            }).join('\n');
+
+        }
+
+        if (isString(value)) {
+            return value;
+        }
+
+        return Main._jsonStringifyOutput(value);
+
     }
 
     private static _createObjectFromSetActions (actions : Array<PropertySetAction>, object : InventoryData) : InventoryData {

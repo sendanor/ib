@@ -133,8 +133,8 @@ export class InventoryClientUtils {
 
     public static updateHost (request : InventoryPatchRequest) : Promise<InventoryPatchResponse> {
 
-        AssertUtils.isObject(request);
-        AssertUtils.isObject(request.data);
+        AssertUtils.isRegularObject(request);
+        AssertUtils.isRegularObject(request.data);
         AssertUtils.isString(request.url);
         AssertUtils.isString(request.domain);
         AssertUtils.isString(request.name);
@@ -176,7 +176,7 @@ export class InventoryClientUtils {
 
     public static deleteHost (request : InventoryDeleteRequest) : Promise<InventoryDeleteResponse> {
 
-        AssertUtils.isObject(request);
+        AssertUtils.isRegularObject(request);
         AssertUtils.isString(request.url);
         AssertUtils.isString(request.domain);
         AssertUtils.isString(request.resource);
@@ -204,7 +204,7 @@ export class InventoryClientUtils {
 
     public static listHosts (request : InventoryListRequest) : Promise<InventoryListResponse> {
 
-        AssertUtils.isObject(request);
+        AssertUtils.isRegularObject(request);
         AssertUtils.isString(request.url);
         AssertUtils.isString(request.domain);
         if (request.page !== undefined) AssertUtils.isNumber(request.page);
@@ -255,7 +255,7 @@ export class InventoryClientUtils {
 
     public static getHost (request : InventoryGetRequest) : Promise<InventoryGetResponse> {
 
-        AssertUtils.isObject(request);
+        AssertUtils.isRegularObject(request);
         AssertUtils.isString(request.url);
         AssertUtils.isString(request.domain);
         AssertUtils.isString(request.name);
@@ -270,9 +270,10 @@ export class InventoryClientUtils {
 
             if (!item) throw new TypeError('No inventory data in the response');
 
-            LOG.debug('GET: payload, backendResponse, httpResponse = ', payload, backendResponse, httpResponse);
+            LOG.debug('GET: payload= ', payload, ' | backendResponse=', backendResponse, ' | httpResponse=', httpResponse);
 
             return {
+                ...item,
                 $request  : request,
                 $response : backendResponse,
                 $payload  : payload,

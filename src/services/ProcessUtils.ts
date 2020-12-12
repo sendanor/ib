@@ -15,7 +15,7 @@ export class ProcessUtils {
 
     static parseEnvFileLine (obj : Record<string, string>, line : string) : Record<string, string> {
 
-        AssertUtils.isObject(obj);
+        AssertUtils.isRegularObject(obj);
         AssertUtils.isString(line);
 
         if (line.indexOf('=') < 0) {
@@ -54,7 +54,7 @@ export class ProcessUtils {
 
         const params = ProcessUtils.parseEnvFile(file);
 
-        AssertUtils.isObject(params);
+        AssertUtils.isRegularObject(params);
 
         process.env = {
             ...params,

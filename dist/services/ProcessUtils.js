@@ -28,7 +28,7 @@ var ProcessUtils = /** @class */ (function () {
         return process.argv.slice(2);
     };
     ProcessUtils.parseEnvFileLine = function (obj, line) {
-        AssertUtils_1["default"].isObject(obj);
+        AssertUtils_1["default"].isRegularObject(obj);
         AssertUtils_1["default"].isString(line);
         if (line.indexOf('=') < 0) {
             if (line.length) {
@@ -54,7 +54,7 @@ var ProcessUtils = /** @class */ (function () {
     };
     ProcessUtils.initEnvFromFile = function (file) {
         var params = ProcessUtils.parseEnvFile(file);
-        AssertUtils_1["default"].isObject(params);
+        AssertUtils_1["default"].isRegularObject(params);
         process.env = __assign(__assign({}, params), process.env);
     };
     ProcessUtils.initEnvFromDefaultFiles = function () {

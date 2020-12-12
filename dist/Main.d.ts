@@ -12,6 +12,17 @@ export declare class Main {
     private static _jsonStringifyOutput;
     private static _jsonParseInput;
     private static _stringifyOutput;
+    /**
+     *
+     * @param obj
+     * @param key
+     * @param value
+     * @private
+     */
+    private static _flattenJsonAny;
+    private static _flattenJsonArray;
+    private static _flattenJsonObject;
+    private static _flattenJson;
     private static _stringifyRecord;
     private static _createObjectFromSetActions;
     private static _createValueFromType;
