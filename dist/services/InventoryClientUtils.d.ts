@@ -61,7 +61,7 @@ export interface InventoryGetResponse extends InventoryItem {
 export interface InventoryDeleteRequest {
     readonly url: InventoryUrlType;
     readonly domain: InventoryDomainType;
-    readonly resource: InventoryNameType;
+    readonly name: InventoryNameType;
 }
 export interface InventoryDeleteResponse {
     readonly $request: InventoryDeleteRequest;
@@ -78,5 +78,8 @@ export declare class InventoryClientUtils {
     static listHosts(request: InventoryListRequest): Promise<InventoryListResponse>;
     static getHost(request: InventoryGetRequest): Promise<InventoryGetResponse>;
     private static q;
+    static getHostListUrl(url: string, domain: string, page?: number | undefined, size?: number | undefined): string;
+    static getHostUrl(url: string, domain: string, name: string): string;
+    static getDomainUrl(url: string, domain: string): string;
 }
 export default InventoryClientUtils;

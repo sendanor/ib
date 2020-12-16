@@ -1,7 +1,28 @@
 // Copyright (c) 2020 Sendanor. All rights reserved.
 
-import InventoryLogLevel from "../types/InventoryLogLevel";
-import {IB_LOG_LEVEL} from "../constants/env";
+import {trim} from "../modules/lodash";
+
+export enum LogLevel {
+
+    DEBUG,
+    INFO,
+    WARN,
+    ERROR
+
+}
+
+export function parseLogLevel (value: string) : LogLevel {
+
+    switch (trim(value).toUpperCase()) {
+        case 'DEBUG' : return LogLevel.DEBUG;
+        case 'INFO'  : return LogLevel.INFO;
+        case 'WARN'  : return LogLevel.WARN;
+        case 'ERROR' : return LogLevel.ERROR;
+    }
+
+    throw new TypeError(`The log level "${value}" was not valid log level.`);
+
+}
 
 export class Logger {
 
@@ -31,10 +52,10 @@ export class Logger {
 
 export class LogService {
 
-    private static _level  : InventoryLogLevel = IB_LOG_LEVEL;
+    private static _level  : LogLevel = LogLevel.INFO;
     private static _logger : any = console;
 
-    public static setLogLevel (value : InventoryLogLevel) {
+    public static setLogLevel (value : LogLevel) {
         this._level = value;
     }
 
@@ -44,25 +65,25 @@ export class LogService {
     }
 
     public static debug (...args : Array<any>) {
-        if (this._level <= InventoryLogLevel.DEBUG) {
+        if (this._level <= LogLevel.DEBUG) {
             this._logger.debug(...args);
         }
     }
 
     public static info (...args : Array<any>) {
-        if (this._level <= InventoryLogLevel.INFO) {
+        if (this._level <= LogLevel.INFO) {
             this._logger.info(...args);
         }
     }
 
     public static warn (...args : Array<any>) {
-        if (this._level <= InventoryLogLevel.WARN) {
+        if (this._level <= LogLevel.WARN) {
             this._logger.warn(...args);
         }
     }
 
     public static error (...args : Array<any>) {
-        if (this._level <= InventoryLogLevel.ERROR) {
+        if (this._level <= LogLevel.ERROR) {
             this._logger.error(...args);
         }
     }

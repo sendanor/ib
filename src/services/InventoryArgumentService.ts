@@ -2,7 +2,7 @@
 
 import {forEach, indexOf, isNumber, keys, map, reduce, some, startsWith, trim} from "../modules/lodash";
 import InventoryAction from "../types/InventoryAction";
-import LogService from "./LogService";
+import LogService, {LogLevel, parseLogLevel} from "./LogService";
 import {IB_META_KEY} from "../constants/env";
 
 const LOG = LogService.createLogger('InventoryArgumentService');
@@ -36,8 +36,27 @@ export enum InventoryInputType {
 
 export enum InventoryOptionKey {
 
-    URL    = "url",
-    DOMAIN = "domain"
+    LOG_LEVEL  = "log-level",
+    URL        = "url",
+    DOMAIN     = "domain"
+
+}
+
+export function parseInventoryOptionKey (value: string) : InventoryOptionKey | undefined {
+
+    switch(value) {
+
+        case 'log'       :
+        case 'loglevel'  :
+        case 'log-level' : return InventoryOptionKey.LOG_LEVEL;
+
+        case 'url'       : return InventoryOptionKey.URL;
+
+        case 'domain'    : return InventoryOptionKey.DOMAIN;
+
+    }
+
+    return undefined;
 
 }
 
@@ -62,6 +81,7 @@ export interface MainArgumentsObject {
     readonly domain             ?: string;
     readonly url                ?: string;
     readonly resource           ?: string;
+    readonly logLevel           ?: LogLevel;
 
     readonly propertyGetActions ?: Array<PropertyGetAction>;
     readonly propertySetActions ?: Array<PropertySetAction>;
@@ -100,11 +120,12 @@ export class InventoryArgumentService {
 
             const hasValue : boolean = valueKeyIndex >= 0;
 
-            const optKey : string | InventoryOptionKey = item.substr('--'.length, hasValue ? valueKeyIndex - '--'.length : item.length - 2);
+            const optKey : InventoryOptionKey | undefined = parseInventoryOptionKey(item.substr('--'.length, hasValue ? valueKeyIndex - '--'.length : item.length - 2));
 
-            const value : string | undefined = hasValue ? item.substr(valueKeyIndex+1) : '';
+            if (optKey) {
 
-            if (InventoryArgumentService.isInventoryOptionKey(optKey)) {
+                const value : string | undefined = hasValue ? item.substr(valueKeyIndex+1) : '';
+
                 switch(optKey) {
 
                     case InventoryOptionKey.URL:
@@ -118,6 +139,13 @@ export class InventoryArgumentService {
                         result = {
                             ...result,
                             domain: value
+                        };
+                        break;
+
+                    case InventoryOptionKey.LOG_LEVEL:
+                        result = {
+                            ...result,
+                            logLevel: parseLogLevel(value)
                         };
                         break;
 

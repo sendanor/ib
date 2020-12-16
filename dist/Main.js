@@ -35,14 +35,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 exports.__esModule = true;
 exports.Main = void 0;
+var env_1 = require("./constants/env");
 var ProcessUtils_1 = __importDefault(require("./services/ProcessUtils"));
 var InventoryArgumentService_1 = __importStar(require("./services/InventoryArgumentService"));
 var lodash_1 = require("./modules/lodash");
 var InventoryAction_1 = __importDefault(require("./types/InventoryAction"));
 var InventoryClientUtils_1 = __importDefault(require("./services/InventoryClientUtils"));
-var env_1 = require("./constants/env");
-var LogService_1 = __importDefault(require("./services/LogService"));
 var Json_1 = require("./types/Json");
+var LogService_1 = __importDefault(require("./services/LogService"));
 var LOG = LogService_1["default"].createLogger('Main');
 var Main = /** @class */ (function () {
     function Main() {
@@ -106,6 +106,9 @@ var Main = /** @class */ (function () {
             return Promise.resolve(0);
         }
         var parsedArgs = InventoryArgumentService_1["default"].parseInventoryArguments(args);
+        if (parsedArgs.logLevel) {
+            LogService_1["default"].setLogLevel(parsedArgs.logLevel);
+        }
         LOG.debug('Args: ', parsedArgs);
         switch (parsedArgs.action) {
             case InventoryAction_1["default"].LOGIN: return Main.loginAction(parsedArgs);
@@ -203,7 +206,7 @@ var Main = /** @class */ (function () {
         return InventoryClientUtils_1["default"].deleteHost({
             url: url,
             domain: domain,
-            resource: resource
+            name: resource
         }).then(function (response) {
             console.log(Main._stringifyOutput(response.changed, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT));
             return 0;

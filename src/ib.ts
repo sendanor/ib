@@ -6,19 +6,35 @@ import ProcessUtils from "./services/ProcessUtils";
 // Must be first line to load the ENV
 ProcessUtils.initEnvFromDefaultFiles();
 
+import LogService from "./services/LogService";
+import {IB_LOG_LEVEL} from "./constants/env";
+
+LogService.setLogLevel(IB_LOG_LEVEL);
+
 import * as HTTP from 'http';
 import * as URL from 'url';
 
 import Main from './Main';
 import HttpClientUtils from "./services/HttpClientUtils";
-import LogService from "./services/LogService";
-import {IB_META_KEY} from "./constants/env";
+import {isNumber} from "./modules/lodash";
 
 const LOG = LogService.createLogger('ib');
 
 function handleError (err : any) {
 
-    console.error('ERROR: ' + (err?.message ?? ''+err) );
+    const statusCode : any = err?.status;
+
+    if ( isNumber(statusCode) ) {
+
+        const reason = err?.data?.payload?.reason;
+
+        console.error(`ERROR: ${statusCode} ${reason}` );
+
+    } else {
+
+        console.error('ERROR: ' + (err?.message ?? ''+err) );
+
+    }
 
     // Enable later when there is a support for debug flag
     LOG.debug('Exception: ', err);

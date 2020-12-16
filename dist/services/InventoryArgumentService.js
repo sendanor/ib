@@ -11,14 +11,33 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
-exports.InventoryArgumentService = exports.InventoryOptionKey = exports.InventoryInputType = exports.InventoryOutputFormat = void 0;
+exports.InventoryArgumentService = exports.parseInventoryOptionKey = exports.InventoryOptionKey = exports.InventoryInputType = exports.InventoryOutputFormat = void 0;
 var lodash_1 = require("../modules/lodash");
 var InventoryAction_1 = __importDefault(require("../types/InventoryAction"));
-var LogService_1 = __importDefault(require("./LogService"));
+var LogService_1 = __importStar(require("./LogService"));
 var env_1 = require("../constants/env");
 var LOG = LogService_1["default"].createLogger('InventoryArgumentService');
 var InventoryOutputFormat;
@@ -46,9 +65,21 @@ var InventoryInputType;
 })(InventoryInputType = exports.InventoryInputType || (exports.InventoryInputType = {}));
 var InventoryOptionKey;
 (function (InventoryOptionKey) {
+    InventoryOptionKey["LOG_LEVEL"] = "log-level";
     InventoryOptionKey["URL"] = "url";
     InventoryOptionKey["DOMAIN"] = "domain";
 })(InventoryOptionKey = exports.InventoryOptionKey || (exports.InventoryOptionKey = {}));
+function parseInventoryOptionKey(value) {
+    switch (value) {
+        case 'log':
+        case 'loglevel':
+        case 'log-level': return InventoryOptionKey.LOG_LEVEL;
+        case 'url': return InventoryOptionKey.URL;
+        case 'domain': return InventoryOptionKey.DOMAIN;
+    }
+    return undefined;
+}
+exports.parseInventoryOptionKey = parseInventoryOptionKey;
 var InventoryArgumentService = /** @class */ (function () {
     function InventoryArgumentService() {
     }
@@ -73,15 +104,18 @@ var InventoryArgumentService = /** @class */ (function () {
         if (lodash_1.startsWith(item, '--')) {
             var valueKeyIndex = item.indexOf('=');
             var hasValue = valueKeyIndex >= 0;
-            var optKey = item.substr('--'.length, hasValue ? valueKeyIndex - '--'.length : item.length - 2);
-            var value = hasValue ? item.substr(valueKeyIndex + 1) : '';
-            if (InventoryArgumentService.isInventoryOptionKey(optKey)) {
+            var optKey = parseInventoryOptionKey(item.substr('--'.length, hasValue ? valueKeyIndex - '--'.length : item.length - 2));
+            if (optKey) {
+                var value = hasValue ? item.substr(valueKeyIndex + 1) : '';
                 switch (optKey) {
                     case InventoryOptionKey.URL:
                         result = __assign(__assign({}, result), { url: value });
                         break;
                     case InventoryOptionKey.DOMAIN:
                         result = __assign(__assign({}, result), { domain: value });
+                        break;
+                    case InventoryOptionKey.LOG_LEVEL:
+                        result = __assign(__assign({}, result), { logLevel: LogService_1.parseLogLevel(value) });
                         break;
                     default:
                         throw new TypeError("The option was not implemented: \"" + optKey + "\"");

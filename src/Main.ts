@@ -1,37 +1,42 @@
 // Copyright (c) 2020 Sendanor. All rights reserved.
 
+import {
+    IB_DOMAIN,
+    IB_URL
+} from "./constants/env";
+
 import ProcessUtils from "./services/ProcessUtils";
+
 import InventoryArgumentService, {
     InventoryInputType,
     InventoryOutputFormat,
     MainArgumentsObject, PropertyGetAction, PropertySetAction
 } from "./services/InventoryArgumentService";
+
 import {forEach, has, isArray, isObject, isString, keys, map, reduce, some} from "./modules/lodash";
 import InventoryAction from "./types/InventoryAction";
+
 import InventoryClientUtils, {
     InventoryDeleteResponse,
     InventoryGetResponse,
     InventoryListResponse,
     InventoryPatchResponse
 } from "./services/InventoryClientUtils";
-import {IB_DOMAIN, IB_META_KEY, IB_URL} from "./constants/env";
-import LogService from "./services/LogService";
+
 import InventoryData from "./types/InventoryData";
-import PlainObject, {PlainObjectOf} from "./types/PlainObject";
-import JsonAny, {
+
+import {
     FlatJsonValue,
     isFlatJsonValue,
-    isJsonSerializable,
-    isReadonlyJsonAny,
     isReadonlyJsonArray,
     isReadonlyJsonObject,
     isReadonlyJsonSerializable,
     ReadonlyFlatJsonObject,
     ReadonlyJsonAny, ReadonlyJsonArray,
-    ReadonlyJsonArrayOf,
-    ReadonlyJsonObject,
-    ReadonlyJsonObjectOf
+    ReadonlyJsonObject
 } from "./types/Json";
+
+import LogService from "./services/LogService";
 
 const LOG = LogService.createLogger('Main');
 
@@ -120,6 +125,10 @@ export class Main {
         }
 
         const parsedArgs = InventoryArgumentService.parseInventoryArguments(args);
+
+        if (parsedArgs.logLevel) {
+            LogService.setLogLevel(parsedArgs.logLevel);
+        }
 
         LOG.debug('Args: ', parsedArgs);
 
@@ -255,7 +264,7 @@ export class Main {
         return InventoryClientUtils.deleteHost({
             url: url,
             domain: domain,
-            resource: resource
+            name: resource
         }).then((response : InventoryDeleteResponse) => {
 
             console.log( Main._stringifyOutput(response.changed, InventoryOutputFormat.DEFAULT) );

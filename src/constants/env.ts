@@ -1,7 +1,6 @@
 // Copyright (c) 2020 Sendanor. All rights reserved.
 
-import InventoryLogLevel from "../types/InventoryLogLevel";
-import LogUtils from "../services/LogUtils";
+import {LogLevel, parseLogLevel} from "../services/LogService";
 
 /**
  * The default resource domain to use.
@@ -27,4 +26,4 @@ export const IB_META_KEY : string = process?.env?.IB_META_KEY ?? '@';
 /**
  * The default log level
  */
-export const IB_LOG_LEVEL : InventoryLogLevel = LogUtils.parseLogLevelString(process?.env?.IB_LOG_LEVEL ?? "INFO" );
+export const IB_LOG_LEVEL : LogLevel = parseLogLevel(process?.env?.IB_LOG_LEVEL ?? "INFO" );

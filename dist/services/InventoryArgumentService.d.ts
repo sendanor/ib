@@ -1,4 +1,5 @@
 import InventoryAction from "../types/InventoryAction";
+import { LogLevel } from "./LogService";
 export declare enum InventoryOutputFormat {
     RECORD = "record",
     STRING = "string",
@@ -21,9 +22,11 @@ export declare enum InventoryInputType {
     NULL = "null"
 }
 export declare enum InventoryOptionKey {
+    LOG_LEVEL = "log-level",
     URL = "url",
     DOMAIN = "domain"
 }
+export declare function parseInventoryOptionKey(value: string): InventoryOptionKey | undefined;
 export interface PropertyGetAction {
     readonly key?: string;
     readonly format?: InventoryOutputFormat;
@@ -38,6 +41,7 @@ export interface MainArgumentsObject {
     readonly domain?: string;
     readonly url?: string;
     readonly resource?: string;
+    readonly logLevel?: LogLevel;
     readonly propertyGetActions?: Array<PropertyGetAction>;
     readonly propertySetActions?: Array<PropertySetAction>;
 }

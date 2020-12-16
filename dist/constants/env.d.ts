@@ -1,4 +1,4 @@
-import InventoryLogLevel from "../types/InventoryLogLevel";
+import { LogLevel } from "../services/LogService";
 /**
  * The default resource domain to use.
  *
@@ -20,4 +20,4 @@ export declare const IB_META_KEY: string;
 /**
  * The default log level
  */
-export declare const IB_LOG_LEVEL: InventoryLogLevel;
+export declare const IB_LOG_LEVEL: LogLevel;

@@ -110,9 +110,9 @@ export interface InventoryGetResponse extends InventoryItem {
 
 export interface InventoryDeleteRequest {
 
-    readonly url      : InventoryUrlType;
-    readonly domain   : InventoryDomainType;
-    readonly resource : InventoryNameType;
+    readonly url    : InventoryUrlType;
+    readonly domain : InventoryDomainType;
+    readonly name   : InventoryNameType;
 
 }
 
@@ -139,7 +139,7 @@ export class InventoryClientUtils {
         AssertUtils.isString(request.domain);
         AssertUtils.isString(request.name);
 
-        const url = `${ request.url }/${ this.q(request.domain) }`;
+        const url = InventoryClientUtils.getHostListUrl(request.url, request.domain);
 
         const name = request?.name;
 
@@ -179,9 +179,9 @@ export class InventoryClientUtils {
         AssertUtils.isRegularObject(request);
         AssertUtils.isString(request.url);
         AssertUtils.isString(request.domain);
-        AssertUtils.isString(request.resource);
+        AssertUtils.isString(request.name);
 
-        const url = `${ request.url }/${ this.q(request.domain) }/${ this.q(request.resource) }`;
+        const url = InventoryClientUtils.getHostUrl(request.url, request.domain, request.name);
 
         return HttpClientUtils.jsonRequest(HttpMethod.DELETE, url).then((httpResponse: HttpResponse<any>) : InventoryDeleteResponse => {
 
@@ -210,11 +210,7 @@ export class InventoryClientUtils {
         if (request.page !== undefined) AssertUtils.isNumber(request.page);
         if (request.size !== undefined) AssertUtils.isNumber(request.size);
 
-        // FIXME: Add support for changing these from the command line
-        const page = request.page ?? 1;
-        const size = request.size ?? 10;
-
-        const url = `${ request.url }/${ this.q(request.domain) }?page=${this.q(''+page)}&size=${this.q(''+size)}`;
+        const url = InventoryClientUtils.getHostListUrl(request.url, request.domain, request.page, request.size);
 
         return HttpClientUtils.jsonRequest(HttpMethod.GET, url).then((httpResponse: HttpResponse<BackendResponse<BackendListPayload<BackendItemPayload<InventoryData>>>>) : InventoryListResponse => {
 
@@ -260,7 +256,7 @@ export class InventoryClientUtils {
         AssertUtils.isString(request.domain);
         AssertUtils.isString(request.name);
 
-        const url = `${ request.url }/${ this.q(request.domain) }/${ this.q(request.name) }`;
+        const url = InventoryClientUtils.getHostUrl(request.url, request.domain, request.name);
 
         return HttpClientUtils.jsonRequest(HttpMethod.GET, url).then((httpResponse: HttpResponse<any>) : InventoryGetResponse => {
 
@@ -288,6 +284,35 @@ export class InventoryClientUtils {
 
     private static q (value : string) : string {
         return HttpClientUtils.encodeURIComponent(value);
+    }
+
+    public static getHostListUrl (
+        url    : string,
+        domain : string,
+        page   : number | undefined = undefined,
+        size   : number | undefined = undefined
+    ) : string {
+
+        let params = [];
+
+        if (page !== undefined) {
+            params.push( `page=${this.q(''+page)}` );
+        }
+
+        if (size !== undefined) {
+            params.push( `size=${this.q(''+size)}` );
+        }
+
+        return InventoryClientUtils.getDomainUrl(url, domain) + '/hosts' + (params.length ? `?${ params.join('&') }` : '');
+
+    }
+
+    public static getHostUrl (url : string, domain: string, name: string) : string {
+        return `${ InventoryClientUtils.getDomainUrl(url, domain) }/hosts/${ this.q(name) }`;
+    }
+
+    public static getDomainUrl (url : string, domain: string) : string {
+        return `${ url }/domains/${ this.q(domain) }`;
     }
 
 }

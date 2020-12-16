@@ -1,12 +1,9 @@
 "use strict";
 // Copyright (c) 2020 Sendanor. All rights reserved.
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 var _a, _b, _c, _d, _e, _f, _g, _h;
 exports.__esModule = true;
 exports.IB_LOG_LEVEL = exports.IB_META_KEY = exports.IB_URL = exports.IB_DOMAIN = void 0;
-var LogUtils_1 = __importDefault(require("../services/LogUtils"));
+var LogService_1 = require("../services/LogService");
 /**
  * The default resource domain to use.
  *
@@ -28,5 +25,5 @@ exports.IB_META_KEY = (_f = (_e = process === null || process === void 0 ? void 
 /**
  * The default log level
  */
-exports.IB_LOG_LEVEL = LogUtils_1["default"].parseLogLevelString((_h = (_g = process === null || process === void 0 ? void 0 : process.env) === null || _g === void 0 ? void 0 : _g.IB_LOG_LEVEL) !== null && _h !== void 0 ? _h : "INFO");
+exports.IB_LOG_LEVEL = LogService_1.parseLogLevel((_h = (_g = process === null || process === void 0 ? void 0 : process.env) === null || _g === void 0 ? void 0 : _g.IB_LOG_LEVEL) !== null && _h !== void 0 ? _h : "INFO");
 //# sourceMappingURL=env.js.map
