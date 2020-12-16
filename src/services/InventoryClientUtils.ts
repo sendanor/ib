@@ -22,7 +22,9 @@ export type InventoryNameType     = string;
 
 export interface BackendListPayload< T extends ReadonlyJsonAny > extends ReadonlyJsonObject {
 
-    readonly hosts      : ReadonlyArray<T>;
+    readonly entities   : ReadonlyArray<T>;
+    readonly pageNumber : number;
+    readonly pageSize   : number;
     readonly totalCount : number;
     readonly pageCount  : number;
 
@@ -196,7 +198,7 @@ export class InventoryClientUtils {
         AssertUtils.isString(request.domain);
         AssertUtils.isString(request.name);
 
-        const url = InventoryClientUtils.getHostListUrl(request.url, request.domain);
+        const url = InventoryClientUtils.getHostUrl(request.url, request.domain, request.name);
 
         const name = request?.name;
 
@@ -278,7 +280,7 @@ export class InventoryClientUtils {
 
             // FIXME: Add assert and/or type hint check for ReadonlyArray<InventoryItem>
 
-            const items : ReadonlyArray<InventoryItem> = map(payload.hosts, (item : BackendItemPayload<InventoryData>) : InventoryItem => {
+            const items : ReadonlyArray<InventoryItem> = map(payload.entities, (item : BackendItemPayload<InventoryData>) : InventoryItem => {
 
                 const data : InventoryData | undefined = item.data;
 

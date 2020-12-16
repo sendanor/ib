@@ -75,7 +75,7 @@ var InventoryClientUtils = /** @class */ (function () {
         AssertUtils_1["default"].isString(request.url);
         AssertUtils_1["default"].isString(request.domain);
         AssertUtils_1["default"].isString(request.name);
-        var url = InventoryClientUtils.getHostListUrl(request.url, request.domain);
+        var url = InventoryClientUtils.getHostUrl(request.url, request.domain, request.name);
         var name = request === null || request === void 0 ? void 0 : request.name;
         if (!name)
             throw new TypeError('The resource name is required.');
@@ -126,7 +126,7 @@ var InventoryClientUtils = /** @class */ (function () {
             var payload = backendResponse.payload;
             LOG.debug('LIST: payload, backendResponse, httpResponse = ', payload, backendResponse, httpResponse);
             // FIXME: Add assert and/or type hint check for ReadonlyArray<InventoryItem>
-            var items = lodash_1.map(payload.hosts, function (item) {
+            var items = lodash_1.map(payload.entities, function (item) {
                 var data = item.data;
                 if (!data)
                     throw new TypeError("Item \"" + (item === null || item === void 0 ? void 0 : item.id) + "\" in the response did not have data property!");

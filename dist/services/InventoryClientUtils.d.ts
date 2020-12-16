@@ -7,7 +7,9 @@ export declare type InventoryUrlType = string;
 export declare type InventoryDomainType = string;
 export declare type InventoryNameType = string;
 export interface BackendListPayload<T extends ReadonlyJsonAny> extends ReadonlyJsonObject {
-    readonly hosts: ReadonlyArray<T>;
+    readonly entities: ReadonlyArray<T>;
+    readonly pageNumber: number;
+    readonly pageSize: number;
     readonly totalCount: number;
     readonly pageCount: number;
 }

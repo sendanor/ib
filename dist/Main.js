@@ -49,6 +49,10 @@ var Main = /** @class */ (function () {
     }
     Main.printFullUsage = function () {
         console.log('\n' +
+            'ib [OPTION(S)] [create]\n' +
+            '\n' +
+            '    Create the inventory domain.\n' +
+            '\n' +
             'ib [OPTION(S)] [list]\n' +
             '\n' +
             '    List inventory items in the domain.\n' +
@@ -89,6 +93,8 @@ var Main = /** @class */ (function () {
     };
     Main.printShortUsage = function () {
         console.log('\n' +
+            'ib [OPTION(S)] [create]\n' +
+            '\n' +
             'ib [OPTION(S)] [list]\n' +
             '\n' +
             'ib [OPTION(S)] [get] UUID|NAME [[OBJ.]KEY[:FORMAT]][ [[OBJ2.]KEY2[:FORMAT]] ...]\n' +

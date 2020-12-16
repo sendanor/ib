@@ -47,6 +47,11 @@ export class Main {
         console.log(
 
             '\n'+
+            'ib [OPTION(S)] [create]\n' +
+            '\n'+
+            '    Create the inventory domain.\n' +
+            '\n'+
+
             'ib [OPTION(S)] [list]\n' +
             '\n'+
             '    List inventory items in the domain.\n' +
@@ -98,6 +103,9 @@ export class Main {
         console.log(
 
             '\n'+
+            'ib [OPTION(S)] [create]\n' +
+            '\n'+
+
             'ib [OPTION(S)] [list]\n' +
             '\n'+
 
