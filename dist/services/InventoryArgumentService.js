@@ -92,6 +92,7 @@ var InventoryArgumentService = /** @class */ (function () {
     };
     InventoryArgumentService.parseInventoryAction = function (value) {
         switch (value) {
+            case 'create': return InventoryAction_1["default"].CREATE;
             case 'list': return InventoryAction_1["default"].LIST;
             case 'get': return InventoryAction_1["default"].GET;
             case 'set': return InventoryAction_1["default"].SET;

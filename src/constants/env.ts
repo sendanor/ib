@@ -7,7 +7,7 @@ import {LogLevel, parseLogLevel} from "../services/LogService";
  *
  * This defaults to "hosts".
  */
-export const IB_DOMAIN : string = process?.env?.IB_DOMAIN ?? "hosts";
+export const IB_DOMAIN : string = process?.env?.IB_DOMAIN ?? "main";
 
 /**
  * The default URL to use to the backend.

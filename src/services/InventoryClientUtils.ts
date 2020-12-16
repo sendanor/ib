@@ -44,6 +44,22 @@ export interface BackendResponse<T extends ReadonlyJsonAny|undefined> extends Re
 
 }
 
+export interface InventoryDomainCreateRequest extends ReadonlyJsonObject {
+
+    readonly url      : InventoryUrlType;
+    readonly domain   : InventoryDomainType;
+
+}
+
+export interface InventoryDomainCreateResponse extends InventoryItem {
+
+    readonly $request  : InventoryDomainCreateRequest;
+    readonly $response : BackendResponse<BackendItemPayload<InventoryData>>;
+    readonly $payload  : BackendItemPayload<InventoryData>;
+    readonly $data     : InventoryData;
+
+}
+
 // Types for PATCH
 
 export interface InventoryPatchRequest extends ReadonlyJsonObject {
@@ -130,6 +146,47 @@ export interface InventoryDeleteResponse {
  * Utility services to implement Inventory Clients
  */
 export class InventoryClientUtils {
+
+    public static createDomain (request : InventoryDomainCreateRequest) : Promise<InventoryDomainCreateResponse> {
+
+        AssertUtils.isRegularObject(request);
+        AssertUtils.isString(request.url);
+        AssertUtils.isString(request.domain);
+
+        const url = InventoryClientUtils.getDomainListUrl(request.url, request.domain);
+
+        const name = request?.domain;
+
+        if (!name) throw new TypeError('The domain name is required.');
+
+        const data = {
+            name: name,
+            data: request?.data ?? {}
+        };
+
+        return HttpClientUtils.jsonRequest(HttpMethod.POST, url, data).then((httpResponse: HttpResponse<BackendResponse<BackendItemPayload<InventoryData>>>) : InventoryDomainCreateResponse => {
+
+            const backendResponse : BackendResponse<BackendItemPayload<InventoryData>> = httpResponse.data;
+            const payload         : BackendItemPayload<InventoryData>                  = backendResponse.payload;
+            const item            : InventoryData | undefined                          = payload.data;
+
+            LOG.debug('PUT DOMAIN: item, backendResponse, httpResponse = ', item, backendResponse, httpResponse);
+
+            if (!item) throw new TypeError('Backend payload did not have inventory data');
+
+            return {
+                ...item,
+                $request  : request,
+                $response : backendResponse,
+                $payload  : payload,
+                $id       : payload.id,
+                $name     : payload.name,
+                $data     : item
+            };
+
+        });
+
+    }
 
     public static updateHost (request : InventoryPatchRequest) : Promise<InventoryPatchResponse> {
 
@@ -304,6 +361,29 @@ export class InventoryClientUtils {
         }
 
         return InventoryClientUtils.getDomainUrl(url, domain) + '/hosts' + (params.length ? `?${ params.join('&') }` : '');
+
+    }
+
+    public static getDomainListUrl (
+        url    : string,
+        domain : string,
+        page   : number | undefined = undefined,
+        size   : number | undefined = undefined
+    ) : string {
+
+        let params = [];
+
+        if (page !== undefined) {
+            params.push( `page=${this.q(''+page)}` );
+        }
+
+        if (size !== undefined) {
+            params.push( `size=${this.q(''+size)}` );
+        }
+
+        const paramString = params.length ? `?${ params.join('&') }` : '';
+
+        return `${url}/domains${ paramString }`;
 
     }
 

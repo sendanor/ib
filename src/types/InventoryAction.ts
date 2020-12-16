@@ -7,6 +7,7 @@ export enum InventoryAction {
     LIST    = 'LIST',
     GET     = 'GET',
     SET     = 'SET',
+    CREATE  = 'CREATE',
     DELETE  = 'DELETE'
 
 }

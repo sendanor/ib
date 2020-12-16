@@ -16,7 +16,7 @@ import * as URL from 'url';
 
 import Main from './Main';
 import HttpClientUtils from "./services/HttpClientUtils";
-import {isNumber} from "./modules/lodash";
+import {isNumber, isString} from "./modules/lodash";
 
 const LOG = LogService.createLogger('ib');
 
@@ -24,9 +24,15 @@ function handleError (err : any) {
 
     const statusCode : any = err?.status;
 
-    if ( isNumber(statusCode) ) {
+    if ( isNumber(statusCode) && isString(err?.data?.payload?.reason) ) {
 
         const reason = err?.data?.payload?.reason;
+
+        console.error(`ERROR: ${statusCode} ${reason}`);
+
+    } else if ( isNumber(statusCode) && isString(err?.data?.payload) ) {
+
+        const reason = err?.data?.payload;
 
         console.error(`ERROR: ${statusCode} ${reason}` );
 

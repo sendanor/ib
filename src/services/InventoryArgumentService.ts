@@ -103,6 +103,7 @@ export class InventoryArgumentService {
 
     public static parseInventoryAction (value : string) : InventoryAction | undefined {
         switch (value) {
+            case 'create': return InventoryAction.CREATE;
             case 'list'  : return InventoryAction.LIST;
             case 'get'   : return InventoryAction.GET;
             case 'set'   : return InventoryAction.SET;

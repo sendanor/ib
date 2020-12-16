@@ -4,6 +4,7 @@ export declare enum InventoryAction {
     LIST = "LIST",
     GET = "GET",
     SET = "SET",
+    CREATE = "CREATE",
     DELETE = "DELETE"
 }
 export default InventoryAction;

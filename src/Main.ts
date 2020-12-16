@@ -17,7 +17,7 @@ import {forEach, has, isArray, isObject, isString, keys, map, reduce, some} from
 import InventoryAction from "./types/InventoryAction";
 
 import InventoryClientUtils, {
-    InventoryDeleteResponse,
+    InventoryDeleteResponse, InventoryDomainCreateResponse,
     InventoryGetResponse,
     InventoryListResponse,
     InventoryPatchResponse
@@ -136,6 +136,7 @@ export class Main {
 
             case InventoryAction.LOGIN   : return Main.loginAction(parsedArgs);
             case InventoryAction.LOGOUT  : return Main.logoutAction(parsedArgs);
+            case InventoryAction.CREATE  : return Main.createAction(parsedArgs);
             case InventoryAction.LIST    : return Main.listHostsAction(parsedArgs);
             case InventoryAction.GET     : return Main.getResourceAction(parsedArgs);
             case InventoryAction.SET     : return Main.setResourceAction(parsedArgs);
@@ -222,6 +223,30 @@ export class Main {
                 });
 
             }
+
+            return 0;
+
+        });
+
+    }
+
+    public static createAction (parsedArgs : MainArgumentsObject) : Promise<number> {
+
+        const url      = parsedArgs?.url    ?? IB_URL;
+        const domain   = parsedArgs?.domain ?? IB_DOMAIN;
+        const resource = parsedArgs?.resource;
+        const propertySetActions : Array<PropertySetAction> | undefined = parsedArgs?.propertySetActions;
+
+        // let data : InventoryData = propertySetActions ? Main._createObjectFromSetActions(propertySetActions, {}) : {};
+
+        if (resource) throw new TypeError(`Host create is not implemented. Use 'set' action.`);
+
+        return InventoryClientUtils.createDomain({
+            url: url,
+            domain: domain
+        }).then((response : InventoryDomainCreateResponse) => {
+
+            console.log( Main._stringifyOutput(response, InventoryOutputFormat.DEFAULT) );
 
             return 0;
 

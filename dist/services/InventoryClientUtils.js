@@ -46,6 +46,29 @@ var LOG = LogService_1["default"].createLogger('InventoryClientUtils');
 var InventoryClientUtils = /** @class */ (function () {
     function InventoryClientUtils() {
     }
+    InventoryClientUtils.createDomain = function (request) {
+        var _a;
+        AssertUtils_1["default"].isRegularObject(request);
+        AssertUtils_1["default"].isString(request.url);
+        AssertUtils_1["default"].isString(request.domain);
+        var url = InventoryClientUtils.getDomainListUrl(request.url, request.domain);
+        var name = request === null || request === void 0 ? void 0 : request.domain;
+        if (!name)
+            throw new TypeError('The domain name is required.');
+        var data = {
+            name: name,
+            data: (_a = request === null || request === void 0 ? void 0 : request.data) !== null && _a !== void 0 ? _a : {}
+        };
+        return HttpClientUtils_1["default"].jsonRequest(HttpClientUtils_1.HttpMethod.POST, url, data).then(function (httpResponse) {
+            var backendResponse = httpResponse.data;
+            var payload = backendResponse.payload;
+            var item = payload.data;
+            LOG.debug('PUT DOMAIN: item, backendResponse, httpResponse = ', item, backendResponse, httpResponse);
+            if (!item)
+                throw new TypeError('Backend payload did not have inventory data');
+            return __assign(__assign({}, item), { $request: request, $response: backendResponse, $payload: payload, $id: payload.id, $name: payload.name, $data: item });
+        });
+    };
     InventoryClientUtils.updateHost = function (request) {
         AssertUtils_1["default"].isRegularObject(request);
         AssertUtils_1["default"].isRegularObject(request.data);
@@ -149,6 +172,19 @@ var InventoryClientUtils = /** @class */ (function () {
             params.push("size=" + this.q('' + size));
         }
         return InventoryClientUtils.getDomainUrl(url, domain) + '/hosts' + (params.length ? "?" + params.join('&') : '');
+    };
+    InventoryClientUtils.getDomainListUrl = function (url, domain, page, size) {
+        if (page === void 0) { page = undefined; }
+        if (size === void 0) { size = undefined; }
+        var params = [];
+        if (page !== undefined) {
+            params.push("page=" + this.q('' + page));
+        }
+        if (size !== undefined) {
+            params.push("size=" + this.q('' + size));
+        }
+        var paramString = params.length ? "?" + params.join('&') : '';
+        return url + "/domains" + paramString;
     };
     InventoryClientUtils.getHostUrl = function (url, domain, name) {
         return InventoryClientUtils.getDomainUrl(url, domain) + "/hosts/" + this.q(name);

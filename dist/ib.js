@@ -37,14 +37,18 @@ var HttpClientUtils_1 = __importDefault(require("./services/HttpClientUtils"));
 var lodash_1 = require("./modules/lodash");
 var LOG = LogService_1["default"].createLogger('ib');
 function handleError(err) {
-    var _a, _b, _c;
+    var _a, _b, _c, _d, _e, _f, _g;
     var statusCode = err === null || err === void 0 ? void 0 : err.status;
-    if (lodash_1.isNumber(statusCode)) {
-        var reason = (_b = (_a = err === null || err === void 0 ? void 0 : err.data) === null || _a === void 0 ? void 0 : _a.payload) === null || _b === void 0 ? void 0 : _b.reason;
+    if (lodash_1.isNumber(statusCode) && lodash_1.isString((_b = (_a = err === null || err === void 0 ? void 0 : err.data) === null || _a === void 0 ? void 0 : _a.payload) === null || _b === void 0 ? void 0 : _b.reason)) {
+        var reason = (_d = (_c = err === null || err === void 0 ? void 0 : err.data) === null || _c === void 0 ? void 0 : _c.payload) === null || _d === void 0 ? void 0 : _d.reason;
+        console.error("ERROR: " + statusCode + " " + reason);
+    }
+    else if (lodash_1.isNumber(statusCode) && lodash_1.isString((_e = err === null || err === void 0 ? void 0 : err.data) === null || _e === void 0 ? void 0 : _e.payload)) {
+        var reason = (_f = err === null || err === void 0 ? void 0 : err.data) === null || _f === void 0 ? void 0 : _f.payload;
         console.error("ERROR: " + statusCode + " " + reason);
     }
     else {
-        console.error('ERROR: ' + ((_c = err === null || err === void 0 ? void 0 : err.message) !== null && _c !== void 0 ? _c : '' + err));
+        console.error('ERROR: ' + ((_g = err === null || err === void 0 ? void 0 : err.message) !== null && _g !== void 0 ? _g : '' + err));
     }
     // Enable later when there is a support for debug flag
     LOG.debug('Exception: ', err);

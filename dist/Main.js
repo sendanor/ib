@@ -113,6 +113,7 @@ var Main = /** @class */ (function () {
         switch (parsedArgs.action) {
             case InventoryAction_1["default"].LOGIN: return Main.loginAction(parsedArgs);
             case InventoryAction_1["default"].LOGOUT: return Main.logoutAction(parsedArgs);
+            case InventoryAction_1["default"].CREATE: return Main.createAction(parsedArgs);
             case InventoryAction_1["default"].LIST: return Main.listHostsAction(parsedArgs);
             case InventoryAction_1["default"].GET: return Main.getResourceAction(parsedArgs);
             case InventoryAction_1["default"].SET: return Main.setResourceAction(parsedArgs);
@@ -176,6 +177,23 @@ var Main = /** @class */ (function () {
                     }
                 });
             }
+            return 0;
+        });
+    };
+    Main.createAction = function (parsedArgs) {
+        var _a, _b;
+        var url = (_a = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.url) !== null && _a !== void 0 ? _a : env_1.IB_URL;
+        var domain = (_b = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.domain) !== null && _b !== void 0 ? _b : env_1.IB_DOMAIN;
+        var resource = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.resource;
+        var propertySetActions = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.propertySetActions;
+        // let data : InventoryData = propertySetActions ? Main._createObjectFromSetActions(propertySetActions, {}) : {};
+        if (resource)
+            throw new TypeError("Host create is not implemented. Use 'set' action.");
+        return InventoryClientUtils_1["default"].createDomain({
+            url: url,
+            domain: domain
+        }).then(function (response) {
+            console.log(Main._stringifyOutput(response, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT));
             return 0;
         });
     };

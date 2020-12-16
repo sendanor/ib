@@ -9,7 +9,7 @@ var LogService_1 = require("../services/LogService");
  *
  * This defaults to "hosts".
  */
-exports.IB_DOMAIN = (_b = (_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.IB_DOMAIN) !== null && _b !== void 0 ? _b : "hosts";
+exports.IB_DOMAIN = (_b = (_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a.IB_DOMAIN) !== null && _b !== void 0 ? _b : "main";
 /**
  * The default URL to use to the backend.
  *

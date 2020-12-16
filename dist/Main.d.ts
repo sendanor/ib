@@ -7,6 +7,7 @@ export declare class Main {
     static logoutAction(parsedArgs: MainArgumentsObject): Promise<number>;
     static listHostsAction(parsedArgs: MainArgumentsObject): Promise<number>;
     static getResourceAction(parsedArgs: MainArgumentsObject): Promise<number>;
+    static createAction(parsedArgs: MainArgumentsObject): Promise<number>;
     static setResourceAction(parsedArgs: MainArgumentsObject): Promise<number>;
     static deleteResourceAction(parsedArgs: MainArgumentsObject): Promise<number>;
     private static _jsonStringifyOutput;

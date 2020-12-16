@@ -9,6 +9,7 @@ var InventoryAction;
     InventoryAction["LIST"] = "LIST";
     InventoryAction["GET"] = "GET";
     InventoryAction["SET"] = "SET";
+    InventoryAction["CREATE"] = "CREATE";
     InventoryAction["DELETE"] = "DELETE";
 })(InventoryAction = exports.InventoryAction || (exports.InventoryAction = {}));
 exports["default"] = InventoryAction;
