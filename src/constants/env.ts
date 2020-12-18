@@ -17,6 +17,17 @@ export const IB_DOMAIN : string = process?.env?.IB_DOMAIN ?? "main";
 export const IB_URL : string = process?.env?.IB_URL ?? "http://localhost/ib";
 
 /**
+ * Default output filters.
+ *
+ * These is space separated property names to filter out of the results.
+ *
+ * It defaults to "-$*", eg. to hide all meta properties from the output.
+ *
+ * @see You can control this also using --include and --exclude
+ */
+export const IB_FILTER : string = process?.env?.IB_FILTER ?? "-$*";
+
+/**
  * The meta character to use for meta properties like id and name, which are not part of the host variables.
  *
  * It defaults to `@`.

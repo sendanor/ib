@@ -27,5 +27,8 @@ export declare class Main {
     private static _stringifyRecord;
     private static _createObjectFromSetActions;
     private static _createValueFromType;
+    private static _getFilteredKeys;
+    private static _isKeyMatch;
+    private static _parsePropertyFilterString;
 }
 export default Main;
