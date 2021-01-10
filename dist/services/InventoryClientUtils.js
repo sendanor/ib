@@ -110,6 +110,22 @@ var InventoryClientUtils = /** @class */ (function () {
                 $payload: payload,
                 changed: backendResponse.changed
             };
+        }, function (err) {
+            var _a;
+            if ((err === null || err === void 0 ? void 0 : err.status) === 404) {
+                var backendResponse = err.data;
+                var payload = (_a = backendResponse === null || backendResponse === void 0 ? void 0 : backendResponse.payload) !== null && _a !== void 0 ? _a : undefined;
+                LOG.debug('DELETE (ERROR): payload, backendResponse, err = ', payload, backendResponse, err);
+                return {
+                    $request: request,
+                    $response: backendResponse,
+                    $payload: payload,
+                    changed: backendResponse.changed
+                };
+            }
+            else {
+                return Promise.reject(err);
+            }
         });
     };
     InventoryClientUtils.listHosts = function (request) {
