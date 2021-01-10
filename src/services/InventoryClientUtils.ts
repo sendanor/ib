@@ -22,7 +22,9 @@ export type InventoryNameType     = string;
 
 export interface BackendListPayload< T extends ReadonlyJsonAny > extends ReadonlyJsonObject {
 
-    readonly hosts      : ReadonlyArray<T>;
+    readonly entities   : ReadonlyArray<T>;
+    readonly pageNumber : number;
+    readonly pageSize   : number;
     readonly totalCount : number;
     readonly pageCount  : number;
 
@@ -41,6 +43,22 @@ export interface BackendResponse<T extends ReadonlyJsonAny|undefined> extends Re
     readonly timestamp : InventoryTimestamp;
     readonly payload   : T;
     readonly changed   : boolean;
+
+}
+
+export interface InventoryDomainCreateRequest extends ReadonlyJsonObject {
+
+    readonly url      : InventoryUrlType;
+    readonly domain   : InventoryDomainType;
+
+}
+
+export interface InventoryDomainCreateResponse extends InventoryItem {
+
+    readonly $request  : InventoryDomainCreateRequest;
+    readonly $response : BackendResponse<BackendItemPayload<InventoryData>>;
+    readonly $payload  : BackendItemPayload<InventoryData>;
+    readonly $data     : InventoryData;
 
 }
 
@@ -110,9 +128,9 @@ export interface InventoryGetResponse extends InventoryItem {
 
 export interface InventoryDeleteRequest {
 
-    readonly url      : InventoryUrlType;
-    readonly domain   : InventoryDomainType;
-    readonly resource : InventoryNameType;
+    readonly url    : InventoryUrlType;
+    readonly domain : InventoryDomainType;
+    readonly name   : InventoryNameType;
 
 }
 
@@ -131,6 +149,47 @@ export interface InventoryDeleteResponse {
  */
 export class InventoryClientUtils {
 
+    public static createDomain (request : InventoryDomainCreateRequest) : Promise<InventoryDomainCreateResponse> {
+
+        AssertUtils.isRegularObject(request);
+        AssertUtils.isString(request.url);
+        AssertUtils.isString(request.domain);
+
+        const url = InventoryClientUtils.getDomainListUrl(request.url, request.domain);
+
+        const name = request?.domain;
+
+        if (!name) throw new TypeError('The domain name is required.');
+
+        const data = {
+            name: name,
+            data: request?.data ?? {}
+        };
+
+        return HttpClientUtils.jsonRequest(HttpMethod.POST, url, data).then((httpResponse: HttpResponse<BackendResponse<BackendItemPayload<InventoryData>>>) : InventoryDomainCreateResponse => {
+
+            const backendResponse : BackendResponse<BackendItemPayload<InventoryData>> = httpResponse.data;
+            const payload         : BackendItemPayload<InventoryData>                  = backendResponse.payload;
+            const item            : InventoryData | undefined                          = payload.data;
+
+            LOG.debug('PUT DOMAIN: item, backendResponse, httpResponse = ', item, backendResponse, httpResponse);
+
+            if (!item) throw new TypeError('Backend payload did not have inventory data');
+
+            return {
+                ...item,
+                $request  : request,
+                $response : backendResponse,
+                $payload  : payload,
+                $id       : payload.id,
+                $name     : payload.name,
+                $data     : item
+            };
+
+        });
+
+    }
+
     public static updateHost (request : InventoryPatchRequest) : Promise<InventoryPatchResponse> {
 
         AssertUtils.isRegularObject(request);
@@ -139,7 +198,7 @@ export class InventoryClientUtils {
         AssertUtils.isString(request.domain);
         AssertUtils.isString(request.name);
 
-        const url = `${ request.url }/${ this.q(request.domain) }`;
+        const url = InventoryClientUtils.getHostUrl(request.url, request.domain, request.name);
 
         const name = request?.name;
 
@@ -179,9 +238,9 @@ export class InventoryClientUtils {
         AssertUtils.isRegularObject(request);
         AssertUtils.isString(request.url);
         AssertUtils.isString(request.domain);
-        AssertUtils.isString(request.resource);
+        AssertUtils.isString(request.name);
 
-        const url = `${ request.url }/${ this.q(request.domain) }/${ this.q(request.resource) }`;
+        const url = InventoryClientUtils.getHostUrl(request.url, request.domain, request.name);
 
         return HttpClientUtils.jsonRequest(HttpMethod.DELETE, url).then((httpResponse: HttpResponse<any>) : InventoryDeleteResponse => {
 
@@ -210,11 +269,7 @@ export class InventoryClientUtils {
         if (request.page !== undefined) AssertUtils.isNumber(request.page);
         if (request.size !== undefined) AssertUtils.isNumber(request.size);
 
-        // FIXME: Add support for changing these from the command line
-        const page = request.page ?? 1;
-        const size = request.size ?? 10;
-
-        const url = `${ request.url }/${ this.q(request.domain) }?page=${this.q(''+page)}&size=${this.q(''+size)}`;
+        const url = InventoryClientUtils.getHostListUrl(request.url, request.domain, request.page, request.size);
 
         return HttpClientUtils.jsonRequest(HttpMethod.GET, url).then((httpResponse: HttpResponse<BackendResponse<BackendListPayload<BackendItemPayload<InventoryData>>>>) : InventoryListResponse => {
 
@@ -225,7 +280,7 @@ export class InventoryClientUtils {
 
             // FIXME: Add assert and/or type hint check for ReadonlyArray<InventoryItem>
 
-            const items : ReadonlyArray<InventoryItem> = map(payload.hosts, (item : BackendItemPayload<InventoryData>) : InventoryItem => {
+            const items : ReadonlyArray<InventoryItem> = map(payload.entities, (item : BackendItemPayload<InventoryData>) : InventoryItem => {
 
                 const data : InventoryData | undefined = item.data;
 
@@ -260,7 +315,7 @@ export class InventoryClientUtils {
         AssertUtils.isString(request.domain);
         AssertUtils.isString(request.name);
 
-        const url = `${ request.url }/${ this.q(request.domain) }/${ this.q(request.name) }`;
+        const url = InventoryClientUtils.getHostUrl(request.url, request.domain, request.name);
 
         return HttpClientUtils.jsonRequest(HttpMethod.GET, url).then((httpResponse: HttpResponse<any>) : InventoryGetResponse => {
 
@@ -288,6 +343,58 @@ export class InventoryClientUtils {
 
     private static q (value : string) : string {
         return HttpClientUtils.encodeURIComponent(value);
+    }
+
+    public static getHostListUrl (
+        url    : string,
+        domain : string,
+        page   : number | undefined = undefined,
+        size   : number | undefined = undefined
+    ) : string {
+
+        let params = [];
+
+        if (page !== undefined) {
+            params.push( `page=${this.q(''+page)}` );
+        }
+
+        if (size !== undefined) {
+            params.push( `size=${this.q(''+size)}` );
+        }
+
+        return InventoryClientUtils.getDomainUrl(url, domain) + '/hosts' + (params.length ? `?${ params.join('&') }` : '');
+
+    }
+
+    public static getDomainListUrl (
+        url    : string,
+        domain : string,
+        page   : number | undefined = undefined,
+        size   : number | undefined = undefined
+    ) : string {
+
+        let params = [];
+
+        if (page !== undefined) {
+            params.push( `page=${this.q(''+page)}` );
+        }
+
+        if (size !== undefined) {
+            params.push( `size=${this.q(''+size)}` );
+        }
+
+        const paramString = params.length ? `?${ params.join('&') }` : '';
+
+        return `${url}/domains${ paramString }`;
+
+    }
+
+    public static getHostUrl (url : string, domain: string, name: string) : string {
+        return `${ InventoryClientUtils.getDomainUrl(url, domain) }/hosts/${ this.q(name) }`;
+    }
+
+    public static getDomainUrl (url : string, domain: string) : string {
+        return `${ url }/domains/${ this.q(domain) }`;
     }
 
 }

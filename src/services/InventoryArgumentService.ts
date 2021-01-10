@@ -2,7 +2,7 @@
 
 import {forEach, indexOf, isNumber, keys, map, reduce, some, startsWith, trim} from "../modules/lodash";
 import InventoryAction from "../types/InventoryAction";
-import LogService from "./LogService";
+import LogService, {LogLevel, parseLogLevel} from "./LogService";
 import {IB_META_KEY} from "../constants/env";
 
 const LOG = LogService.createLogger('InventoryArgumentService');
@@ -36,8 +36,32 @@ export enum InventoryInputType {
 
 export enum InventoryOptionKey {
 
-    URL    = "url",
-    DOMAIN = "domain"
+    LOG_LEVEL  = "log-level",
+    URL        = "url",
+    DOMAIN     = "domain",
+    INCLUDE    = "include",
+    EXCLUDE    = "exclude"
+
+}
+
+export function parseInventoryOptionKey (value: string) : InventoryOptionKey | undefined {
+
+    switch(value) {
+
+        case 'log'       :
+        case 'loglevel'  :
+        case 'log-level' : return InventoryOptionKey.LOG_LEVEL;
+
+        case 'include'   : return InventoryOptionKey.INCLUDE;
+        case 'exclude'   : return InventoryOptionKey.EXCLUDE;
+
+        case 'url'       : return InventoryOptionKey.URL;
+
+        case 'domain'    : return InventoryOptionKey.DOMAIN;
+
+    }
+
+    return undefined;
 
 }
 
@@ -56,12 +80,39 @@ export interface PropertySetAction {
 
 }
 
+export enum PropertyFilterType {
+
+    INCLUDE = "INCLUDE",
+    EXCLUDE = "EXCLUDE"
+
+}
+
+export interface PropertyFilter {
+
+    /**
+     * Match specific property by key name, eg. value `"$*"` will match any keyword with start as `"$"`
+     *
+     * This will also match sub properties, eg. `"$*"` will match `"foo.$id"`.
+     *
+     */
+    name : string;
+
+    /**
+     * Show (include) or hide (exclude) the property
+     */
+    type : PropertyFilterType;
+
+}
+
 export interface MainArgumentsObject {
 
     readonly action             ?: InventoryAction;
     readonly domain             ?: string;
     readonly url                ?: string;
     readonly resource           ?: string;
+    readonly logLevel           ?: LogLevel;
+
+    readonly propertyFilters    ?: Array<PropertyFilter>;
 
     readonly propertyGetActions ?: Array<PropertyGetAction>;
     readonly propertySetActions ?: Array<PropertySetAction>;
@@ -83,6 +134,7 @@ export class InventoryArgumentService {
 
     public static parseInventoryAction (value : string) : InventoryAction | undefined {
         switch (value) {
+            case 'create': return InventoryAction.CREATE;
             case 'list'  : return InventoryAction.LIST;
             case 'get'   : return InventoryAction.GET;
             case 'set'   : return InventoryAction.SET;
@@ -100,11 +152,12 @@ export class InventoryArgumentService {
 
             const hasValue : boolean = valueKeyIndex >= 0;
 
-            const optKey : string | InventoryOptionKey = item.substr('--'.length, hasValue ? valueKeyIndex - '--'.length : item.length - 2);
+            const optKey : InventoryOptionKey | undefined = parseInventoryOptionKey(item.substr('--'.length, hasValue ? valueKeyIndex - '--'.length : item.length - 2));
 
-            const value : string | undefined = hasValue ? item.substr(valueKeyIndex+1) : '';
+            if (optKey) {
 
-            if (InventoryArgumentService.isInventoryOptionKey(optKey)) {
+                const value : string | undefined = hasValue ? item.substr(valueKeyIndex+1) : '';
+
                 switch(optKey) {
 
                     case InventoryOptionKey.URL:
@@ -118,6 +171,39 @@ export class InventoryArgumentService {
                         result = {
                             ...result,
                             domain: value
+                        };
+                        break;
+
+                    case InventoryOptionKey.INCLUDE: {
+                        const filters : Array<PropertyFilter> = ([] as Array<PropertyFilter>).concat( result?.propertyFilters ?? [] );
+                        filters.push({
+                            name: trim(value),
+                            type: PropertyFilterType.INCLUDE
+                        });
+                        result = {
+                            ...result,
+                            propertyFilters: filters
+                        };
+                    }
+                        break;
+
+                    case InventoryOptionKey.EXCLUDE: {
+                        const filters : Array<PropertyFilter> = ([] as Array<PropertyFilter>).concat( result?.propertyFilters ?? [] );
+                        filters.push({
+                            name: trim(value),
+                            type: PropertyFilterType.EXCLUDE
+                        });
+                        result = {
+                            ...result,
+                            propertyFilters: filters
+                        };
+                    }
+                        break;
+
+                    case InventoryOptionKey.LOG_LEVEL:
+                        result = {
+                            ...result,
+                            logLevel: parseLogLevel(value)
                         };
                         break;
 
@@ -517,9 +603,9 @@ export class InventoryArgumentService {
         }, []);
     }
 
-    public static parseInventoryArguments (args: Array<string>) : MainArgumentsObject {
+    public static parseInventoryArguments (args: Array<string>, defaultArgs : MainArgumentsObject ) : MainArgumentsObject {
 
-        let result : MainArgumentsObject = {};
+        let result : MainArgumentsObject = defaultArgs;
         let freeArgs : Array<string> = [];
 
         forEach(args, (item : string) => {

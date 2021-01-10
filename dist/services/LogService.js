@@ -7,13 +7,26 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             r[k] = a[j];
     return r;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 exports.__esModule = true;
-exports.LogService = exports.Logger = void 0;
-var InventoryLogLevel_1 = __importDefault(require("../types/InventoryLogLevel"));
-var env_1 = require("../constants/env");
+exports.LogService = exports.Logger = exports.parseLogLevel = exports.LogLevel = void 0;
+var lodash_1 = require("../modules/lodash");
+var LogLevel;
+(function (LogLevel) {
+    LogLevel[LogLevel["DEBUG"] = 0] = "DEBUG";
+    LogLevel[LogLevel["INFO"] = 1] = "INFO";
+    LogLevel[LogLevel["WARN"] = 2] = "WARN";
+    LogLevel[LogLevel["ERROR"] = 3] = "ERROR";
+})(LogLevel = exports.LogLevel || (exports.LogLevel = {}));
+function parseLogLevel(value) {
+    switch (lodash_1.trim(value).toUpperCase()) {
+        case 'DEBUG': return LogLevel.DEBUG;
+        case 'INFO': return LogLevel.INFO;
+        case 'WARN': return LogLevel.WARN;
+        case 'ERROR': return LogLevel.ERROR;
+    }
+    throw new TypeError("The log level \"" + value + "\" was not valid log level.");
+}
+exports.parseLogLevel = parseLogLevel;
 var Logger = /** @class */ (function () {
     function Logger(name) {
         this.name = name;
@@ -66,7 +79,7 @@ var LogService = /** @class */ (function () {
         for (var _i = 0; _i < arguments.length; _i++) {
             args[_i] = arguments[_i];
         }
-        if (this._level <= InventoryLogLevel_1["default"].DEBUG) {
+        if (this._level <= LogLevel.DEBUG) {
             (_a = this._logger).debug.apply(_a, args);
         }
     };
@@ -76,7 +89,7 @@ var LogService = /** @class */ (function () {
         for (var _i = 0; _i < arguments.length; _i++) {
             args[_i] = arguments[_i];
         }
-        if (this._level <= InventoryLogLevel_1["default"].INFO) {
+        if (this._level <= LogLevel.INFO) {
             (_a = this._logger).info.apply(_a, args);
         }
     };
@@ -86,7 +99,7 @@ var LogService = /** @class */ (function () {
         for (var _i = 0; _i < arguments.length; _i++) {
             args[_i] = arguments[_i];
         }
-        if (this._level <= InventoryLogLevel_1["default"].WARN) {
+        if (this._level <= LogLevel.WARN) {
             (_a = this._logger).warn.apply(_a, args);
         }
     };
@@ -96,14 +109,14 @@ var LogService = /** @class */ (function () {
         for (var _i = 0; _i < arguments.length; _i++) {
             args[_i] = arguments[_i];
         }
-        if (this._level <= InventoryLogLevel_1["default"].ERROR) {
+        if (this._level <= LogLevel.ERROR) {
             (_a = this._logger).error.apply(_a, args);
         }
     };
     LogService.createLogger = function (name) {
         return new Logger(name);
     };
-    LogService._level = env_1.IB_LOG_LEVEL;
+    LogService._level = LogLevel.INFO;
     LogService._logger = console;
     return LogService;
 }());

@@ -7,6 +7,7 @@ export declare class Main {
     static logoutAction(parsedArgs: MainArgumentsObject): Promise<number>;
     static listHostsAction(parsedArgs: MainArgumentsObject): Promise<number>;
     static getResourceAction(parsedArgs: MainArgumentsObject): Promise<number>;
+    static createAction(parsedArgs: MainArgumentsObject): Promise<number>;
     static setResourceAction(parsedArgs: MainArgumentsObject): Promise<number>;
     static deleteResourceAction(parsedArgs: MainArgumentsObject): Promise<number>;
     private static _jsonStringifyOutput;
@@ -26,5 +27,8 @@ export declare class Main {
     private static _stringifyRecord;
     private static _createObjectFromSetActions;
     private static _createValueFromType;
+    private static _getFilteredKeys;
+    private static _isKeyMatch;
+    private static _parsePropertyFilterString;
 }
 export default Main;

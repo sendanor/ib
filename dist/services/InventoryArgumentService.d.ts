@@ -1,4 +1,5 @@
 import InventoryAction from "../types/InventoryAction";
+import { LogLevel } from "./LogService";
 export declare enum InventoryOutputFormat {
     RECORD = "record",
     STRING = "string",
@@ -21,9 +22,13 @@ export declare enum InventoryInputType {
     NULL = "null"
 }
 export declare enum InventoryOptionKey {
+    LOG_LEVEL = "log-level",
     URL = "url",
-    DOMAIN = "domain"
+    DOMAIN = "domain",
+    INCLUDE = "include",
+    EXCLUDE = "exclude"
 }
+export declare function parseInventoryOptionKey(value: string): InventoryOptionKey | undefined;
 export interface PropertyGetAction {
     readonly key?: string;
     readonly format?: InventoryOutputFormat;
@@ -33,11 +38,30 @@ export interface PropertySetAction {
     readonly type?: InventoryInputType;
     readonly value?: string;
 }
+export declare enum PropertyFilterType {
+    INCLUDE = "INCLUDE",
+    EXCLUDE = "EXCLUDE"
+}
+export interface PropertyFilter {
+    /**
+     * Match specific property by key name, eg. value `"$*"` will match any keyword with start as `"$"`
+     *
+     * This will also match sub properties, eg. `"$*"` will match `"foo.$id"`.
+     *
+     */
+    name: string;
+    /**
+     * Show (include) or hide (exclude) the property
+     */
+    type: PropertyFilterType;
+}
 export interface MainArgumentsObject {
     readonly action?: InventoryAction;
     readonly domain?: string;
     readonly url?: string;
     readonly resource?: string;
+    readonly logLevel?: LogLevel;
+    readonly propertyFilters?: Array<PropertyFilter>;
     readonly propertyGetActions?: Array<PropertyGetAction>;
     readonly propertySetActions?: Array<PropertySetAction>;
 }
@@ -74,6 +98,6 @@ export declare class InventoryArgumentService {
     static parseNullValue(key: string, value: string): any;
     static parseInventoryInputValue(key: string, type: InventoryInputType, value: string): any;
     static parseSetPropertyOptions(args: Array<string>): Array<PropertySetAction>;
-    static parseInventoryArguments(args: Array<string>): MainArgumentsObject;
+    static parseInventoryArguments(args: Array<string>, defaultArgs: MainArgumentsObject): MainArgumentsObject;
 }
 export default InventoryArgumentService;

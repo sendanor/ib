@@ -46,13 +46,36 @@ var LOG = LogService_1["default"].createLogger('InventoryClientUtils');
 var InventoryClientUtils = /** @class */ (function () {
     function InventoryClientUtils() {
     }
+    InventoryClientUtils.createDomain = function (request) {
+        var _a;
+        AssertUtils_1["default"].isRegularObject(request);
+        AssertUtils_1["default"].isString(request.url);
+        AssertUtils_1["default"].isString(request.domain);
+        var url = InventoryClientUtils.getDomainListUrl(request.url, request.domain);
+        var name = request === null || request === void 0 ? void 0 : request.domain;
+        if (!name)
+            throw new TypeError('The domain name is required.');
+        var data = {
+            name: name,
+            data: (_a = request === null || request === void 0 ? void 0 : request.data) !== null && _a !== void 0 ? _a : {}
+        };
+        return HttpClientUtils_1["default"].jsonRequest(HttpClientUtils_1.HttpMethod.POST, url, data).then(function (httpResponse) {
+            var backendResponse = httpResponse.data;
+            var payload = backendResponse.payload;
+            var item = payload.data;
+            LOG.debug('PUT DOMAIN: item, backendResponse, httpResponse = ', item, backendResponse, httpResponse);
+            if (!item)
+                throw new TypeError('Backend payload did not have inventory data');
+            return __assign(__assign({}, item), { $request: request, $response: backendResponse, $payload: payload, $id: payload.id, $name: payload.name, $data: item });
+        });
+    };
     InventoryClientUtils.updateHost = function (request) {
         AssertUtils_1["default"].isRegularObject(request);
         AssertUtils_1["default"].isRegularObject(request.data);
         AssertUtils_1["default"].isString(request.url);
         AssertUtils_1["default"].isString(request.domain);
         AssertUtils_1["default"].isString(request.name);
-        var url = request.url + "/" + this.q(request.domain);
+        var url = InventoryClientUtils.getHostUrl(request.url, request.domain, request.name);
         var name = request === null || request === void 0 ? void 0 : request.name;
         if (!name)
             throw new TypeError('The resource name is required.');
@@ -74,8 +97,8 @@ var InventoryClientUtils = /** @class */ (function () {
         AssertUtils_1["default"].isRegularObject(request);
         AssertUtils_1["default"].isString(request.url);
         AssertUtils_1["default"].isString(request.domain);
-        AssertUtils_1["default"].isString(request.resource);
-        var url = request.url + "/" + this.q(request.domain) + "/" + this.q(request.resource);
+        AssertUtils_1["default"].isString(request.name);
+        var url = InventoryClientUtils.getHostUrl(request.url, request.domain, request.name);
         return HttpClientUtils_1["default"].jsonRequest(HttpClientUtils_1.HttpMethod.DELETE, url).then(function (httpResponse) {
             var _a;
             var backendResponse = httpResponse.data;
@@ -90,7 +113,6 @@ var InventoryClientUtils = /** @class */ (function () {
         });
     };
     InventoryClientUtils.listHosts = function (request) {
-        var _a, _b;
         AssertUtils_1["default"].isRegularObject(request);
         AssertUtils_1["default"].isString(request.url);
         AssertUtils_1["default"].isString(request.domain);
@@ -98,16 +120,13 @@ var InventoryClientUtils = /** @class */ (function () {
             AssertUtils_1["default"].isNumber(request.page);
         if (request.size !== undefined)
             AssertUtils_1["default"].isNumber(request.size);
-        // FIXME: Add support for changing these from the command line
-        var page = (_a = request.page) !== null && _a !== void 0 ? _a : 1;
-        var size = (_b = request.size) !== null && _b !== void 0 ? _b : 10;
-        var url = request.url + "/" + this.q(request.domain) + "?page=" + this.q('' + page) + "&size=" + this.q('' + size);
+        var url = InventoryClientUtils.getHostListUrl(request.url, request.domain, request.page, request.size);
         return HttpClientUtils_1["default"].jsonRequest(HttpClientUtils_1.HttpMethod.GET, url).then(function (httpResponse) {
             var backendResponse = httpResponse.data;
             var payload = backendResponse.payload;
             LOG.debug('LIST: payload, backendResponse, httpResponse = ', payload, backendResponse, httpResponse);
             // FIXME: Add assert and/or type hint check for ReadonlyArray<InventoryItem>
-            var items = lodash_1.map(payload.hosts, function (item) {
+            var items = lodash_1.map(payload.entities, function (item) {
                 var data = item.data;
                 if (!data)
                     throw new TypeError("Item \"" + (item === null || item === void 0 ? void 0 : item.id) + "\" in the response did not have data property!");
@@ -128,7 +147,7 @@ var InventoryClientUtils = /** @class */ (function () {
         AssertUtils_1["default"].isString(request.url);
         AssertUtils_1["default"].isString(request.domain);
         AssertUtils_1["default"].isString(request.name);
-        var url = request.url + "/" + this.q(request.domain) + "/" + this.q(request.name);
+        var url = InventoryClientUtils.getHostUrl(request.url, request.domain, request.name);
         return HttpClientUtils_1["default"].jsonRequest(HttpClientUtils_1.HttpMethod.GET, url).then(function (httpResponse) {
             var backendResponse = httpResponse.data;
             var payload = backendResponse.payload;
@@ -141,6 +160,37 @@ var InventoryClientUtils = /** @class */ (function () {
     };
     InventoryClientUtils.q = function (value) {
         return HttpClientUtils_1["default"].encodeURIComponent(value);
+    };
+    InventoryClientUtils.getHostListUrl = function (url, domain, page, size) {
+        if (page === void 0) { page = undefined; }
+        if (size === void 0) { size = undefined; }
+        var params = [];
+        if (page !== undefined) {
+            params.push("page=" + this.q('' + page));
+        }
+        if (size !== undefined) {
+            params.push("size=" + this.q('' + size));
+        }
+        return InventoryClientUtils.getDomainUrl(url, domain) + '/hosts' + (params.length ? "?" + params.join('&') : '');
+    };
+    InventoryClientUtils.getDomainListUrl = function (url, domain, page, size) {
+        if (page === void 0) { page = undefined; }
+        if (size === void 0) { size = undefined; }
+        var params = [];
+        if (page !== undefined) {
+            params.push("page=" + this.q('' + page));
+        }
+        if (size !== undefined) {
+            params.push("size=" + this.q('' + size));
+        }
+        var paramString = params.length ? "?" + params.join('&') : '';
+        return url + "/domains" + paramString;
+    };
+    InventoryClientUtils.getHostUrl = function (url, domain, name) {
+        return InventoryClientUtils.getDomainUrl(url, domain) + "/hosts/" + this.q(name);
+    };
+    InventoryClientUtils.getDomainUrl = function (url, domain) {
+        return url + "/domains/" + this.q(domain);
     };
     return InventoryClientUtils;
 }());

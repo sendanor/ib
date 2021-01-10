@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
-exports.indexOf = exports.keys = exports.startsWith = exports.every = exports.some = exports.reduce = exports.filter = exports.map = exports.forEach = exports.isNull = exports.isBoolean = exports.isObject = exports.isArray = exports.isFunction = exports.isString = exports.isNumber = exports.trim = exports.set = exports.get = exports.has = void 0;
+exports.indexOf = exports.keys = exports.startsWith = exports.every = exports.some = exports.reduce = exports.filter = exports.map = exports.forEach = exports.concat = exports.isNull = exports.isBoolean = exports.isObject = exports.isArray = exports.isFunction = exports.isString = exports.isNumber = exports.trim = exports.set = exports.get = exports.has = void 0;
 var has_1 = __importDefault(require("lodash/has"));
 exports.has = has_1["default"];
 var get_1 = __importDefault(require("lodash/get"));
@@ -27,6 +27,8 @@ var isArray_1 = __importDefault(require("lodash/isArray"));
 exports.isArray = isArray_1["default"];
 var isObject_1 = __importDefault(require("lodash/isObject"));
 exports.isObject = isObject_1["default"];
+var concat_1 = __importDefault(require("lodash/concat"));
+exports.concat = concat_1["default"];
 var forEach_1 = __importDefault(require("lodash/forEach"));
 exports.forEach = forEach_1["default"];
 var map_1 = __importDefault(require("lodash/map"));

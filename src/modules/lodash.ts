@@ -11,6 +11,7 @@ import isBoolean  from "lodash/isBoolean";
 import isNull     from "lodash/isNull";
 import isArray    from "lodash/isArray";
 import isObject   from "lodash/isObject";
+import concat     from "lodash/concat";
 import forEach    from "lodash/forEach";
 import map        from "lodash/map";
 import filter     from "lodash/filter";
@@ -33,6 +34,7 @@ export {
     isObject,
     isBoolean,
     isNull,
+    concat,
     forEach,
     map,
     filter,

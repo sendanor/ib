@@ -11,14 +11,33 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
-exports.InventoryArgumentService = exports.InventoryOptionKey = exports.InventoryInputType = exports.InventoryOutputFormat = void 0;
+exports.InventoryArgumentService = exports.PropertyFilterType = exports.parseInventoryOptionKey = exports.InventoryOptionKey = exports.InventoryInputType = exports.InventoryOutputFormat = void 0;
 var lodash_1 = require("../modules/lodash");
 var InventoryAction_1 = __importDefault(require("../types/InventoryAction"));
-var LogService_1 = __importDefault(require("./LogService"));
+var LogService_1 = __importStar(require("./LogService"));
 var env_1 = require("../constants/env");
 var LOG = LogService_1["default"].createLogger('InventoryArgumentService');
 var InventoryOutputFormat;
@@ -46,9 +65,30 @@ var InventoryInputType;
 })(InventoryInputType = exports.InventoryInputType || (exports.InventoryInputType = {}));
 var InventoryOptionKey;
 (function (InventoryOptionKey) {
+    InventoryOptionKey["LOG_LEVEL"] = "log-level";
     InventoryOptionKey["URL"] = "url";
     InventoryOptionKey["DOMAIN"] = "domain";
+    InventoryOptionKey["INCLUDE"] = "include";
+    InventoryOptionKey["EXCLUDE"] = "exclude";
 })(InventoryOptionKey = exports.InventoryOptionKey || (exports.InventoryOptionKey = {}));
+function parseInventoryOptionKey(value) {
+    switch (value) {
+        case 'log':
+        case 'loglevel':
+        case 'log-level': return InventoryOptionKey.LOG_LEVEL;
+        case 'include': return InventoryOptionKey.INCLUDE;
+        case 'exclude': return InventoryOptionKey.EXCLUDE;
+        case 'url': return InventoryOptionKey.URL;
+        case 'domain': return InventoryOptionKey.DOMAIN;
+    }
+    return undefined;
+}
+exports.parseInventoryOptionKey = parseInventoryOptionKey;
+var PropertyFilterType;
+(function (PropertyFilterType) {
+    PropertyFilterType["INCLUDE"] = "INCLUDE";
+    PropertyFilterType["EXCLUDE"] = "EXCLUDE";
+})(PropertyFilterType = exports.PropertyFilterType || (exports.PropertyFilterType = {}));
 var InventoryArgumentService = /** @class */ (function () {
     function InventoryArgumentService() {
     }
@@ -61,6 +101,7 @@ var InventoryArgumentService = /** @class */ (function () {
     };
     InventoryArgumentService.parseInventoryAction = function (value) {
         switch (value) {
+            case 'create': return InventoryAction_1["default"].CREATE;
             case 'list': return InventoryAction_1["default"].LIST;
             case 'get': return InventoryAction_1["default"].GET;
             case 'set': return InventoryAction_1["default"].SET;
@@ -69,19 +110,43 @@ var InventoryArgumentService = /** @class */ (function () {
         }
     };
     InventoryArgumentService.parseInventoryOptionArgument = function (result, item) {
+        var _a, _b;
         // Parse options
         if (lodash_1.startsWith(item, '--')) {
             var valueKeyIndex = item.indexOf('=');
             var hasValue = valueKeyIndex >= 0;
-            var optKey = item.substr('--'.length, hasValue ? valueKeyIndex - '--'.length : item.length - 2);
-            var value = hasValue ? item.substr(valueKeyIndex + 1) : '';
-            if (InventoryArgumentService.isInventoryOptionKey(optKey)) {
+            var optKey = parseInventoryOptionKey(item.substr('--'.length, hasValue ? valueKeyIndex - '--'.length : item.length - 2));
+            if (optKey) {
+                var value = hasValue ? item.substr(valueKeyIndex + 1) : '';
                 switch (optKey) {
                     case InventoryOptionKey.URL:
                         result = __assign(__assign({}, result), { url: value });
                         break;
                     case InventoryOptionKey.DOMAIN:
                         result = __assign(__assign({}, result), { domain: value });
+                        break;
+                    case InventoryOptionKey.INCLUDE:
+                        {
+                            var filters = [].concat((_a = result === null || result === void 0 ? void 0 : result.propertyFilters) !== null && _a !== void 0 ? _a : []);
+                            filters.push({
+                                name: lodash_1.trim(value),
+                                type: PropertyFilterType.INCLUDE
+                            });
+                            result = __assign(__assign({}, result), { propertyFilters: filters });
+                        }
+                        break;
+                    case InventoryOptionKey.EXCLUDE:
+                        {
+                            var filters = [].concat((_b = result === null || result === void 0 ? void 0 : result.propertyFilters) !== null && _b !== void 0 ? _b : []);
+                            filters.push({
+                                name: lodash_1.trim(value),
+                                type: PropertyFilterType.EXCLUDE
+                            });
+                            result = __assign(__assign({}, result), { propertyFilters: filters });
+                        }
+                        break;
+                    case InventoryOptionKey.LOG_LEVEL:
+                        result = __assign(__assign({}, result), { logLevel: LogService_1.parseLogLevel(value) });
                         break;
                     default:
                         throw new TypeError("The option was not implemented: \"" + optKey + "\"");
@@ -355,8 +420,8 @@ var InventoryArgumentService = /** @class */ (function () {
             return result;
         }, []);
     };
-    InventoryArgumentService.parseInventoryArguments = function (args) {
-        var result = {};
+    InventoryArgumentService.parseInventoryArguments = function (args, defaultArgs) {
+        var result = defaultArgs;
         var freeArgs = [];
         lodash_1.forEach(args, function (item) {
             var prevResult = result;

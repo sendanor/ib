@@ -1,37 +1,58 @@
 // Copyright (c) 2020 Sendanor. All rights reserved.
 
+import {IB_DOMAIN, IB_FILTER, IB_URL} from "./constants/env";
+
 import ProcessUtils from "./services/ProcessUtils";
+
 import InventoryArgumentService, {
     InventoryInputType,
     InventoryOutputFormat,
-    MainArgumentsObject, PropertyGetAction, PropertySetAction
+    MainArgumentsObject,
+    PropertyFilter,
+    PropertyFilterType,
+    PropertyGetAction,
+    PropertySetAction
 } from "./services/InventoryArgumentService";
-import {forEach, has, isArray, isObject, isString, keys, map, reduce, some} from "./modules/lodash";
+
+import {
+    concat,
+    filter,
+    forEach,
+    has,
+    isArray,
+    isObject,
+    isString,
+    keys,
+    map,
+    reduce,
+    some,
+    trim
+} from "./modules/lodash";
 import InventoryAction from "./types/InventoryAction";
+
 import InventoryClientUtils, {
     InventoryDeleteResponse,
+    InventoryDomainCreateResponse,
     InventoryGetResponse,
     InventoryListResponse,
     InventoryPatchResponse
 } from "./services/InventoryClientUtils";
-import {IB_DOMAIN, IB_META_KEY, IB_URL} from "./constants/env";
-import LogService from "./services/LogService";
+
 import InventoryData from "./types/InventoryData";
-import PlainObject, {PlainObjectOf} from "./types/PlainObject";
-import JsonAny, {
+
+import {
     FlatJsonValue,
     isFlatJsonValue,
-    isJsonSerializable,
-    isReadonlyJsonAny,
     isReadonlyJsonArray,
     isReadonlyJsonObject,
     isReadonlyJsonSerializable,
     ReadonlyFlatJsonObject,
-    ReadonlyJsonAny, ReadonlyJsonArray,
-    ReadonlyJsonArrayOf,
-    ReadonlyJsonObject,
-    ReadonlyJsonObjectOf
+    ReadonlyJsonAny,
+    ReadonlyJsonArray,
+    ReadonlyJsonObject
 } from "./types/Json";
+
+import LogService from "./services/LogService";
 
 const LOG = LogService.createLogger('Main');
 
@@ -42,6 +63,11 @@ export class Main {
         console.log(
 
             '\n'+
+            'ib [OPTION(S)] [create]\n' +
+            '\n'+
+            '    Create the inventory domain.\n' +
+            '\n'+
+
             'ib [OPTION(S)] [list]\n' +
             '\n'+
             '    List inventory items in the domain.\n' +
@@ -79,6 +105,30 @@ export class Main {
             '\n'+
             '    See also the IB_URL environment option.\n' +
             '\n'+
+
+            '  --log[-level]=DEBUG|INFO|ERROR|WARN\n' +
+            '\n'+
+            '    The log level.\n' +
+            '\n'+
+            '    Defaults to “INFO”.\n' +
+            '\n'+
+            '    See also the IB_LOG_LEVEL environment option.\n' +
+            '\n'+
+
+            '  --include=VALUE\n' +
+            '\n'+
+            '    Add property name filter to include names.\n' +
+            '\n'+
+            '    See also the IB_FILTER environment option.\n' +
+            '\n'+
+
+            '  --exclude=VALUE\n' +
+            '\n'+
+            '    Add property name filter to exclude names.\n' +
+            '\n'+
+            '    See also the IB_FILTER environment option.\n' +
+            '\n'+
+
             '  --domain=DOMAIN\n' +
             '\n'+
             '    The domain to use. This is by default “hosts”.\n' +
@@ -93,6 +143,9 @@ export class Main {
         console.log(
 
             '\n'+
+            'ib [OPTION(S)] [create]\n' +
+            '\n'+
+
             'ib [OPTION(S)] [list]\n' +
             '\n'+
 
@@ -119,7 +172,13 @@ export class Main {
             return Promise.resolve(0);
         }
 
-        const parsedArgs = InventoryArgumentService.parseInventoryArguments(args);
+        const parsedArgs = InventoryArgumentService.parseInventoryArguments(args, {
+            propertyFilters: Main._parsePropertyFilterString(IB_FILTER)
+        });
+
+        if (parsedArgs.logLevel !== undefined) {
+            LogService.setLogLevel(parsedArgs.logLevel);
+        }
 
         LOG.debug('Args: ', parsedArgs);
 
@@ -127,6 +186,7 @@ export class Main {
 
             case InventoryAction.LOGIN   : return Main.loginAction(parsedArgs);
             case InventoryAction.LOGOUT  : return Main.logoutAction(parsedArgs);
+            case InventoryAction.CREATE  : return Main.createAction(parsedArgs);
             case InventoryAction.LIST    : return Main.listHostsAction(parsedArgs);
             case InventoryAction.GET     : return Main.getResourceAction(parsedArgs);
             case InventoryAction.SET     : return Main.setResourceAction(parsedArgs);
@@ -149,15 +209,16 @@ export class Main {
 
     public static listHostsAction (parsedArgs : MainArgumentsObject) : Promise<number> {
 
-        const url    = parsedArgs?.url    ?? IB_URL;
-        const domain = parsedArgs?.domain ?? IB_DOMAIN;
+        const url                                                       = parsedArgs?.url    ?? IB_URL;
+        const domain                                                    = parsedArgs?.domain ?? IB_DOMAIN;
+        const propertyFilters    : Array<PropertyFilter>    | undefined = parsedArgs?.propertyFilters;
 
         return InventoryClientUtils.listHosts({
             url    : url,
             domain : domain
         }).then((response : InventoryListResponse) => {
 
-            console.log( Main._stringifyOutput(response.items, InventoryOutputFormat.DEFAULT) );
+            console.log( Main._stringifyOutput(response.items, InventoryOutputFormat.DEFAULT, propertyFilters) );
 
             return 0;
 
@@ -167,10 +228,10 @@ export class Main {
 
     public static getResourceAction (parsedArgs : MainArgumentsObject) : Promise<number> {
 
-        const url      = parsedArgs?.url      ?? IB_URL;
-        const domain   = parsedArgs?.domain   ?? IB_DOMAIN;
-        const resource = parsedArgs?.resource ?? IB_DOMAIN;
-
+        const url                                                       = parsedArgs?.url      ?? IB_URL;
+        const domain                                                    = parsedArgs?.domain   ?? IB_DOMAIN;
+        const resource                                                  = parsedArgs?.resource ?? IB_DOMAIN;
+        const propertyFilters    : Array<PropertyFilter>    | undefined = parsedArgs?.propertyFilters;
         const propertyGetActions : Array<PropertyGetAction> | undefined = parsedArgs?.propertyGetActions;
 
         return InventoryClientUtils.getHost({
@@ -181,7 +242,7 @@ export class Main {
 
             if ( propertyGetActions === undefined || propertyGetActions.length === 0 ) {
 
-                console.log( Main._stringifyOutput(response, InventoryOutputFormat.DEFAULT) );
+                console.log( Main._stringifyOutput(response, InventoryOutputFormat.DEFAULT, propertyFilters) );
 
             } else {
 
@@ -200,11 +261,11 @@ export class Main {
 
                     if ( flatResponse && has(flatResponse, key) ) {
 
-                        console.log( Main._stringifyOutput(flatResponse[key], format) );
+                        console.log( Main._stringifyOutput(flatResponse[key], format, propertyFilters) );
 
                     } else if (has(response, key)) {
 
-                        console.log( Main._stringifyOutput(response[key], format) );
+                        console.log( Main._stringifyOutput(response[key], format, propertyFilters) );
 
                     } else {
                         throw new TypeError(`Key "${key}" not found from the response.`);
@@ -220,12 +281,38 @@ export class Main {
 
     }
 
+    public static createAction (parsedArgs : MainArgumentsObject) : Promise<number> {
+
+        const url      = parsedArgs?.url    ?? IB_URL;
+        const domain   = parsedArgs?.domain ?? IB_DOMAIN;
+        const resource = parsedArgs?.resource;
+        const propertySetActions : Array<PropertySetAction> | undefined = parsedArgs?.propertySetActions;
+        const propertyFilters    : Array<PropertyFilter>    | undefined = parsedArgs?.propertyFilters;
+
+        // let data : InventoryData = propertySetActions ? Main._createObjectFromSetActions(propertySetActions, {}) : {};
+
+        if (resource) throw new TypeError(`Host create is not implemented. Use 'set' action.`);
+
+        return InventoryClientUtils.createDomain({
+            url: url,
+            domain: domain
+        }).then((response : InventoryDomainCreateResponse) => {
+
+            console.log( Main._stringifyOutput(response, InventoryOutputFormat.DEFAULT, propertyFilters) );
+
+            return 0;
+
+        });
+
+    }
+
     public static setResourceAction (parsedArgs : MainArgumentsObject) : Promise<number> {
 
         const url      = parsedArgs?.url    ?? IB_URL;
         const domain   = parsedArgs?.domain ?? IB_DOMAIN;
         const resource = parsedArgs?.resource;
         const propertySetActions : Array<PropertySetAction> | undefined = parsedArgs?.propertySetActions;
+        const propertyFilters    : Array<PropertyFilter>    | undefined = parsedArgs?.propertyFilters;
 
         if (!resource) throw new TypeError(`No resource name defined.`);
 
@@ -238,7 +325,7 @@ export class Main {
             data: data
         }).then((response : InventoryPatchResponse) => {
 
-            console.log( Main._stringifyOutput(response, InventoryOutputFormat.DEFAULT) );
+            console.log( Main._stringifyOutput(response, InventoryOutputFormat.DEFAULT, propertyFilters) );
 
             return 0;
 
@@ -251,14 +338,15 @@ export class Main {
         const url      = parsedArgs?.url      ?? IB_URL;
         const domain    = parsedArgs?.domain    ?? IB_DOMAIN;
         const resource = parsedArgs?.resource ?? IB_DOMAIN;
+        const propertyFilters    : Array<PropertyFilter>    | undefined = parsedArgs?.propertyFilters;
 
         return InventoryClientUtils.deleteHost({
             url: url,
             domain: domain,
-            resource: resource
+            name: resource
         }).then((response : InventoryDeleteResponse) => {
 
-            console.log( Main._stringifyOutput(response.changed, InventoryOutputFormat.DEFAULT) );
+            console.log( Main._stringifyOutput(response.changed, InventoryOutputFormat.DEFAULT, propertyFilters) );
 
             return 0;
 
@@ -283,7 +371,11 @@ export class Main {
         }
     }
 
-    private static _stringifyOutput (value : any, type : InventoryOutputFormat) : string {
+    private static _stringifyOutput (
+        value           : any,
+        type            : InventoryOutputFormat,
+        propertyFilters : Array<PropertyFilter> | undefined
+    ) : string {
 
         switch (type) {
 
@@ -291,7 +383,7 @@ export class Main {
                 return `${value}`;
 
             case InventoryOutputFormat.RECORD:
-                return this._stringifyRecord(value);
+                return this._stringifyRecord(value, propertyFilters);
 
             case InventoryOutputFormat.JSON:
                 return this._jsonStringifyOutput(value);
@@ -313,8 +405,8 @@ export class Main {
 
             case InventoryOutputFormat.DEFAULT:
 
-                if (isString(value)) return this._stringifyOutput(value, InventoryOutputFormat.STRING);
-                if (isObject(value)) return this._stringifyOutput(value, InventoryOutputFormat.RECORD);
+                if (isString(value)) return this._stringifyOutput(value, InventoryOutputFormat.STRING, propertyFilters);
+                if (isObject(value)) return this._stringifyOutput(value, InventoryOutputFormat.RECORD, propertyFilters);
 
                 return this._jsonStringifyOutput(value);
 
@@ -402,7 +494,10 @@ export class Main {
 
     }
 
-    private static _stringifyRecord (value : any) : string {
+    private static _stringifyRecord (
+        value           : any,
+        propertyFilters : Array<PropertyFilter> | undefined
+    ) : string {
 
         if (isArray(value)) {
             return map(value, (item : any) => {
@@ -410,7 +505,7 @@ export class Main {
                 const id   = item?.$id;
                 const name = item?.$name ?? id;
 
-                return `${name}\t${ Main._stringifyRecord(item).replace(/\n/g, '\t') }`;
+                return `${name}\t${ Main._stringifyRecord(item, propertyFilters).replace(/\n/g, '\t') }`;
 
             }).join('\n');
         }
@@ -423,9 +518,11 @@ export class Main {
                 throw new TypeError('flatValue was not ReadonlyJsonObject');
             }
 
-            return map(keys(flatValue), (key : string) : string => {
+            const propertyKeys = propertyFilters ? Main._getFilteredKeys(keys(flatValue), propertyFilters) : keys(flatValue);
+
+            return map(propertyKeys, (key : string) : string => {
                 const keyValue       : any    = flatValue[key];
-                const keyValueString : string = Main._stringifyRecord(keyValue);
+                const keyValueString : string = Main._stringifyRecord(keyValue, propertyFilters);
                 return `${key}=${keyValueString}`;
             }).join('\n');
 
@@ -468,6 +565,69 @@ export class Main {
             default                         : throw new TypeError(`Unsupported input type "${type}"`);
 
         }
+    }
+
+    private static _getFilteredKeys (propertyKeys: Array<string>, propertyFilters : Array<PropertyFilter>) : Array<string> {
+
+        let keys = ([] as Array<string>).concat(propertyKeys);
+
+        forEach(propertyFilters, (item : PropertyFilter) => {
+
+            switch(item.type) {
+
+                case PropertyFilterType.INCLUDE:
+                    keys = filter(keys, (key : string) => !Main._isKeyMatch(key, item.name));
+                    keys = concat(keys, filter(propertyKeys, (key : string) => Main._isKeyMatch(key, item.name)) );
+                    break;
+
+                case PropertyFilterType.EXCLUDE:
+                    keys = filter(keys, (key : string) => !Main._isKeyMatch(key, item.name));
+                    break;
+
+            }
+
+        });
+
+        return keys;
+
+    }
+
+    private static _isKeyMatch (key: string, rule: string) {
+        let parts = key.split('.').map((item: string) => trim(item));
+        return some(parts, (item: string) => {
+            if (rule[rule.length-1] === '*') {
+                return item.startsWith(rule.substr(0, rule.length-1));
+            } else {
+                return item === rule;
+            }
+        });
+    }
+
+    private static _parsePropertyFilterString (value: string) : Array<PropertyFilter> {
+
+        let parts = value.split(' ').map((item: string) : string => trim(item)).filter((item : string): boolean => !!item);
+
+        return reduce(
+            parts,
+            (list : Array<PropertyFilter>, item : string) : Array<PropertyFilter> => {
+
+                if (item[0] === '-') {
+                    list.push({
+                        type: PropertyFilterType.EXCLUDE,
+                        name: item.substr(1)
+                    });
+                } else {
+                    list.push({
+                        type: PropertyFilterType.INCLUDE,
+                        name: item
+                    });
+                }
+
+                return list;
+            },
+            [] as Array<PropertyFilter>
+        );
+
     }
 
 }

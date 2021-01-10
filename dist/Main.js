@@ -35,20 +35,24 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 exports.__esModule = true;
 exports.Main = void 0;
+var env_1 = require("./constants/env");
 var ProcessUtils_1 = __importDefault(require("./services/ProcessUtils"));
 var InventoryArgumentService_1 = __importStar(require("./services/InventoryArgumentService"));
 var lodash_1 = require("./modules/lodash");
 var InventoryAction_1 = __importDefault(require("./types/InventoryAction"));
 var InventoryClientUtils_1 = __importDefault(require("./services/InventoryClientUtils"));
-var env_1 = require("./constants/env");
-var LogService_1 = __importDefault(require("./services/LogService"));
 var Json_1 = require("./types/Json");
+var LogService_1 = __importDefault(require("./services/LogService"));
 var LOG = LogService_1["default"].createLogger('Main');
 var Main = /** @class */ (function () {
     function Main() {
     }
     Main.printFullUsage = function () {
         console.log('\n' +
+            'ib [OPTION(S)] [create]\n' +
+            '\n' +
+            '    Create the inventory domain.\n' +
+            '\n' +
             'ib [OPTION(S)] [list]\n' +
             '\n' +
             '    List inventory items in the domain.\n' +
@@ -81,6 +85,26 @@ var Main = /** @class */ (function () {
             '\n' +
             '    See also the IB_URL environment option.\n' +
             '\n' +
+            '  --log[-level]=DEBUG|INFO|ERROR|WARN\n' +
+            '\n' +
+            '    The log level.\n' +
+            '\n' +
+            '    Defaults to “INFO”.\n' +
+            '\n' +
+            '    See also the IB_LOG_LEVEL environment option.\n' +
+            '\n' +
+            '  --include=VALUE\n' +
+            '\n' +
+            '    Add property name filter to include names.\n' +
+            '\n' +
+            '    See also the IB_FILTER environment option.\n' +
+            '\n' +
+            '  --exclude=VALUE\n' +
+            '\n' +
+            '    Add property name filter to exclude names.\n' +
+            '\n' +
+            '    See also the IB_FILTER environment option.\n' +
+            '\n' +
             '  --domain=DOMAIN\n' +
             '\n' +
             '    The domain to use. This is by default “hosts”.\n' +
@@ -89,6 +113,8 @@ var Main = /** @class */ (function () {
     };
     Main.printShortUsage = function () {
         console.log('\n' +
+            'ib [OPTION(S)] [create]\n' +
+            '\n' +
             'ib [OPTION(S)] [list]\n' +
             '\n' +
             'ib [OPTION(S)] [get] UUID|NAME [[OBJ.]KEY[:FORMAT]][ [[OBJ2.]KEY2[:FORMAT]] ...]\n' +
@@ -105,11 +131,17 @@ var Main = /** @class */ (function () {
             Main.printFullUsage();
             return Promise.resolve(0);
         }
-        var parsedArgs = InventoryArgumentService_1["default"].parseInventoryArguments(args);
+        var parsedArgs = InventoryArgumentService_1["default"].parseInventoryArguments(args, {
+            propertyFilters: Main._parsePropertyFilterString(env_1.IB_FILTER)
+        });
+        if (parsedArgs.logLevel !== undefined) {
+            LogService_1["default"].setLogLevel(parsedArgs.logLevel);
+        }
         LOG.debug('Args: ', parsedArgs);
         switch (parsedArgs.action) {
             case InventoryAction_1["default"].LOGIN: return Main.loginAction(parsedArgs);
             case InventoryAction_1["default"].LOGOUT: return Main.logoutAction(parsedArgs);
+            case InventoryAction_1["default"].CREATE: return Main.createAction(parsedArgs);
             case InventoryAction_1["default"].LIST: return Main.listHostsAction(parsedArgs);
             case InventoryAction_1["default"].GET: return Main.getResourceAction(parsedArgs);
             case InventoryAction_1["default"].SET: return Main.setResourceAction(parsedArgs);
@@ -128,11 +160,12 @@ var Main = /** @class */ (function () {
         var _a, _b;
         var url = (_a = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.url) !== null && _a !== void 0 ? _a : env_1.IB_URL;
         var domain = (_b = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.domain) !== null && _b !== void 0 ? _b : env_1.IB_DOMAIN;
+        var propertyFilters = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.propertyFilters;
         return InventoryClientUtils_1["default"].listHosts({
             url: url,
             domain: domain
         }).then(function (response) {
-            console.log(Main._stringifyOutput(response.items, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT));
+            console.log(Main._stringifyOutput(response.items, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT, propertyFilters));
             return 0;
         });
     };
@@ -142,6 +175,7 @@ var Main = /** @class */ (function () {
         var url = (_a = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.url) !== null && _a !== void 0 ? _a : env_1.IB_URL;
         var domain = (_b = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.domain) !== null && _b !== void 0 ? _b : env_1.IB_DOMAIN;
         var resource = (_c = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.resource) !== null && _c !== void 0 ? _c : env_1.IB_DOMAIN;
+        var propertyFilters = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.propertyFilters;
         var propertyGetActions = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.propertyGetActions;
         return InventoryClientUtils_1["default"].getHost({
             url: url,
@@ -149,7 +183,7 @@ var Main = /** @class */ (function () {
             name: resource
         }).then(function (response) {
             if (propertyGetActions === undefined || propertyGetActions.length === 0) {
-                console.log(Main._stringifyOutput(response, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT));
+                console.log(Main._stringifyOutput(response, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT, propertyFilters));
             }
             else {
                 var flatResponse_1 = _this._flattenJson(response);
@@ -163,10 +197,10 @@ var Main = /** @class */ (function () {
                     if (!key)
                         throw new TypeError("Action was not correct. Missing key.");
                     if (flatResponse_1 && lodash_1.has(flatResponse_1, key)) {
-                        console.log(Main._stringifyOutput(flatResponse_1[key], format));
+                        console.log(Main._stringifyOutput(flatResponse_1[key], format, propertyFilters));
                     }
                     else if (lodash_1.has(response, key)) {
-                        console.log(Main._stringifyOutput(response[key], format));
+                        console.log(Main._stringifyOutput(response[key], format, propertyFilters));
                     }
                     else {
                         throw new TypeError("Key \"" + key + "\" not found from the response.");
@@ -176,12 +210,31 @@ var Main = /** @class */ (function () {
             return 0;
         });
     };
+    Main.createAction = function (parsedArgs) {
+        var _a, _b;
+        var url = (_a = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.url) !== null && _a !== void 0 ? _a : env_1.IB_URL;
+        var domain = (_b = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.domain) !== null && _b !== void 0 ? _b : env_1.IB_DOMAIN;
+        var resource = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.resource;
+        var propertySetActions = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.propertySetActions;
+        var propertyFilters = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.propertyFilters;
+        // let data : InventoryData = propertySetActions ? Main._createObjectFromSetActions(propertySetActions, {}) : {};
+        if (resource)
+            throw new TypeError("Host create is not implemented. Use 'set' action.");
+        return InventoryClientUtils_1["default"].createDomain({
+            url: url,
+            domain: domain
+        }).then(function (response) {
+            console.log(Main._stringifyOutput(response, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT, propertyFilters));
+            return 0;
+        });
+    };
     Main.setResourceAction = function (parsedArgs) {
         var _a, _b;
         var url = (_a = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.url) !== null && _a !== void 0 ? _a : env_1.IB_URL;
         var domain = (_b = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.domain) !== null && _b !== void 0 ? _b : env_1.IB_DOMAIN;
         var resource = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.resource;
         var propertySetActions = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.propertySetActions;
+        var propertyFilters = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.propertyFilters;
         if (!resource)
             throw new TypeError("No resource name defined.");
         var data = propertySetActions ? Main._createObjectFromSetActions(propertySetActions, {}) : {};
@@ -191,7 +244,7 @@ var Main = /** @class */ (function () {
             name: resource,
             data: data
         }).then(function (response) {
-            console.log(Main._stringifyOutput(response, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT));
+            console.log(Main._stringifyOutput(response, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT, propertyFilters));
             return 0;
         });
     };
@@ -200,12 +253,13 @@ var Main = /** @class */ (function () {
         var url = (_a = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.url) !== null && _a !== void 0 ? _a : env_1.IB_URL;
         var domain = (_b = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.domain) !== null && _b !== void 0 ? _b : env_1.IB_DOMAIN;
         var resource = (_c = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.resource) !== null && _c !== void 0 ? _c : env_1.IB_DOMAIN;
+        var propertyFilters = parsedArgs === null || parsedArgs === void 0 ? void 0 : parsedArgs.propertyFilters;
         return InventoryClientUtils_1["default"].deleteHost({
             url: url,
             domain: domain,
-            resource: resource
+            name: resource
         }).then(function (response) {
-            console.log(Main._stringifyOutput(response.changed, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT));
+            console.log(Main._stringifyOutput(response.changed, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT, propertyFilters));
             return 0;
         });
     };
@@ -225,12 +279,12 @@ var Main = /** @class */ (function () {
             throw new TypeError("Cannot parse JSON string \"" + value + ": " + err);
         }
     };
-    Main._stringifyOutput = function (value, type) {
+    Main._stringifyOutput = function (value, type, propertyFilters) {
         switch (type) {
             case InventoryArgumentService_1.InventoryOutputFormat.STRING:
                 return "" + value;
             case InventoryArgumentService_1.InventoryOutputFormat.RECORD:
-                return this._stringifyRecord(value);
+                return this._stringifyRecord(value, propertyFilters);
             case InventoryArgumentService_1.InventoryOutputFormat.JSON:
                 return this._jsonStringifyOutput(value);
             case InventoryArgumentService_1.InventoryOutputFormat.OBJECT:
@@ -245,9 +299,9 @@ var Main = /** @class */ (function () {
                 return this._jsonStringifyOutput(value);
             case InventoryArgumentService_1.InventoryOutputFormat.DEFAULT:
                 if (lodash_1.isString(value))
-                    return this._stringifyOutput(value, InventoryArgumentService_1.InventoryOutputFormat.STRING);
+                    return this._stringifyOutput(value, InventoryArgumentService_1.InventoryOutputFormat.STRING, propertyFilters);
                 if (lodash_1.isObject(value))
-                    return this._stringifyOutput(value, InventoryArgumentService_1.InventoryOutputFormat.RECORD);
+                    return this._stringifyOutput(value, InventoryArgumentService_1.InventoryOutputFormat.RECORD, propertyFilters);
                 return this._jsonStringifyOutput(value);
         }
         throw new TypeError("The output type \"" + type + "\" is not implemented for stringifier.");
@@ -288,13 +342,13 @@ var Main = /** @class */ (function () {
             return value;
         return this._flattenJsonAny({}, "", value);
     };
-    Main._stringifyRecord = function (value) {
+    Main._stringifyRecord = function (value, propertyFilters) {
         if (lodash_1.isArray(value)) {
             return lodash_1.map(value, function (item) {
                 var _a;
                 var id = item === null || item === void 0 ? void 0 : item.$id;
                 var name = (_a = item === null || item === void 0 ? void 0 : item.$name) !== null && _a !== void 0 ? _a : id;
-                return name + "\t" + Main._stringifyRecord(item).replace(/\n/g, '\t');
+                return name + "\t" + Main._stringifyRecord(item, propertyFilters).replace(/\n/g, '\t');
             }).join('\n');
         }
         if (lodash_1.isObject(value)) {
@@ -302,9 +356,10 @@ var Main = /** @class */ (function () {
             if (!Json_1.isReadonlyJsonObject(flatValue_1)) { // FIXME: Change to flat test
                 throw new TypeError('flatValue was not ReadonlyJsonObject');
             }
-            return lodash_1.map(lodash_1.keys(flatValue_1), function (key) {
+            var propertyKeys = propertyFilters ? Main._getFilteredKeys(lodash_1.keys(flatValue_1), propertyFilters) : lodash_1.keys(flatValue_1);
+            return lodash_1.map(propertyKeys, function (key) {
                 var keyValue = flatValue_1[key];
-                var keyValueString = Main._stringifyRecord(keyValue);
+                var keyValueString = Main._stringifyRecord(keyValue, propertyFilters);
                 return key + "=" + keyValueString;
             }).join('\n');
         }
@@ -335,6 +390,50 @@ var Main = /** @class */ (function () {
             case InventoryArgumentService_1.InventoryInputType.NULL: return null;
             default: throw new TypeError("Unsupported input type \"" + type + "\"");
         }
+    };
+    Main._getFilteredKeys = function (propertyKeys, propertyFilters) {
+        var keys = [].concat(propertyKeys);
+        lodash_1.forEach(propertyFilters, function (item) {
+            switch (item.type) {
+                case InventoryArgumentService_1.PropertyFilterType.INCLUDE:
+                    keys = lodash_1.filter(keys, function (key) { return !Main._isKeyMatch(key, item.name); });
+                    keys = lodash_1.concat(keys, lodash_1.filter(propertyKeys, function (key) { return Main._isKeyMatch(key, item.name); }));
+                    break;
+                case InventoryArgumentService_1.PropertyFilterType.EXCLUDE:
+                    keys = lodash_1.filter(keys, function (key) { return !Main._isKeyMatch(key, item.name); });
+                    break;
+            }
+        });
+        return keys;
+    };
+    Main._isKeyMatch = function (key, rule) {
+        var parts = key.split('.').map(function (item) { return lodash_1.trim(item); });
+        return lodash_1.some(parts, function (item) {
+            if (rule[rule.length - 1] === '*') {
+                return item.startsWith(rule.substr(0, rule.length - 1));
+            }
+            else {
+                return item === rule;
+            }
+        });
+    };
+    Main._parsePropertyFilterString = function (value) {
+        var parts = value.split(' ').map(function (item) { return lodash_1.trim(item); }).filter(function (item) { return !!item; });
+        return lodash_1.reduce(parts, function (list, item) {
+            if (item[0] === '-') {
+                list.push({
+                    type: InventoryArgumentService_1.PropertyFilterType.EXCLUDE,
+                    name: item.substr(1)
+                });
+            }
+            else {
+                list.push({
+                    type: InventoryArgumentService_1.PropertyFilterType.INCLUDE,
+                    name: item
+                });
+            }
+            return list;
+        }, []);
     };
     return Main;
 }());

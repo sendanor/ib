@@ -7,7 +7,9 @@ export declare type InventoryUrlType = string;
 export declare type InventoryDomainType = string;
 export declare type InventoryNameType = string;
 export interface BackendListPayload<T extends ReadonlyJsonAny> extends ReadonlyJsonObject {
-    readonly hosts: ReadonlyArray<T>;
+    readonly entities: ReadonlyArray<T>;
+    readonly pageNumber: number;
+    readonly pageSize: number;
     readonly totalCount: number;
     readonly pageCount: number;
 }
@@ -20,6 +22,16 @@ export interface BackendResponse<T extends ReadonlyJsonAny | undefined> extends 
     readonly timestamp: InventoryTimestamp;
     readonly payload: T;
     readonly changed: boolean;
+}
+export interface InventoryDomainCreateRequest extends ReadonlyJsonObject {
+    readonly url: InventoryUrlType;
+    readonly domain: InventoryDomainType;
+}
+export interface InventoryDomainCreateResponse extends InventoryItem {
+    readonly $request: InventoryDomainCreateRequest;
+    readonly $response: BackendResponse<BackendItemPayload<InventoryData>>;
+    readonly $payload: BackendItemPayload<InventoryData>;
+    readonly $data: InventoryData;
 }
 export interface InventoryPatchRequest extends ReadonlyJsonObject {
     readonly url: InventoryUrlType;
@@ -61,7 +73,7 @@ export interface InventoryGetResponse extends InventoryItem {
 export interface InventoryDeleteRequest {
     readonly url: InventoryUrlType;
     readonly domain: InventoryDomainType;
-    readonly resource: InventoryNameType;
+    readonly name: InventoryNameType;
 }
 export interface InventoryDeleteResponse {
     readonly $request: InventoryDeleteRequest;
@@ -73,10 +85,15 @@ export interface InventoryDeleteResponse {
  * Utility services to implement Inventory Clients
  */
 export declare class InventoryClientUtils {
+    static createDomain(request: InventoryDomainCreateRequest): Promise<InventoryDomainCreateResponse>;
     static updateHost(request: InventoryPatchRequest): Promise<InventoryPatchResponse>;
     static deleteHost(request: InventoryDeleteRequest): Promise<InventoryDeleteResponse>;
     static listHosts(request: InventoryListRequest): Promise<InventoryListResponse>;
     static getHost(request: InventoryGetRequest): Promise<InventoryGetResponse>;
     private static q;
+    static getHostListUrl(url: string, domain: string, page?: number | undefined, size?: number | undefined): string;
+    static getDomainListUrl(url: string, domain: string, page?: number | undefined, size?: number | undefined): string;
+    static getHostUrl(url: string, domain: string, name: string): string;
+    static getDomainUrl(url: string, domain: string): string;
 }
 export default InventoryClientUtils;
