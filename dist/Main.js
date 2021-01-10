@@ -165,7 +165,9 @@ var Main = /** @class */ (function () {
             url: url,
             domain: domain
         }).then(function (response) {
-            console.log(Main._stringifyOutput(response.items, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT, propertyFilters));
+            if (response.items.length >= 1) {
+                console.log(Main._stringifyOutput(response.items, InventoryArgumentService_1.InventoryOutputFormat.DEFAULT, propertyFilters));
+            }
             return 0;
         });
     };

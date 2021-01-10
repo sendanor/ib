@@ -218,7 +218,9 @@ export class Main {
             domain : domain
         }).then((response : InventoryListResponse) => {
 
-            console.log( Main._stringifyOutput(response.items, InventoryOutputFormat.DEFAULT, propertyFilters) );
+            if (response.items.length >= 1) {
+                console.log( Main._stringifyOutput(response.items, InventoryOutputFormat.DEFAULT, propertyFilters) );
+            }
 
             return 0;
 

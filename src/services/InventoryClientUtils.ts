@@ -257,6 +257,27 @@ export class InventoryClientUtils {
                 changed   : backendResponse.changed
             };
 
+        }, (err) : (InventoryDeleteResponse|any) => {
+
+            if (err?.status === 404) {
+
+                const backendResponse : BackendResponse<BackendItemPayload<InventoryData>> = err.data;
+
+                const payload         : BackendItemPayload<InventoryData>                  = backendResponse?.payload ?? undefined;
+
+                LOG.debug('DELETE (ERROR): payload, backendResponse, err = ', payload, backendResponse, err);
+
+                return {
+                    $request  : request,
+                    $response : backendResponse,
+                    $payload  : payload,
+                    changed   : backendResponse.changed
+                };
+
+            } else {
+                return Promise.reject(err);
+            }
+
         });
 
     }
